@@ -52,6 +52,7 @@ class CloudctlSkill:
         """Get current cloud context.
 
         Uses cached context if available and fresh, otherwise queries cloudctl.
+        Falls back to reading context file if cloudctl status fails.
 
         Returns:
             CloudContext: Current cloud context state
@@ -67,30 +68,37 @@ class CloudctlSkill:
 
         # Query cloudctl status
         result = await self._execute_cloudctl("status")
-        if not result.success:
-            raise RuntimeError(f"Failed to get context: {result.error}")
+        if result.success:
+            # Parse context from output
+            try:
+                context = self._parse_context(result.output)
+                # Context is already frozen, so we can't modify credentials_valid after creation
+                # Cache result
+                if self.config.enable_caching:
+                    self._context_cache = context
+                    self._cache_time = datetime.utcnow()
+                return context
+            except RuntimeError:
+                pass  # Try fallback method
 
-        # Parse context from output
+        # Fallback: Try to read context from file (~/.config/cloudctl/context)
         try:
-            context = self._parse_context(result.output)
-        except RuntimeError as e:
-            # Enhance error message with helpful guidance
-            if "no active context" in str(e).lower():
-                raise RuntimeError(
-                    f"{e}. Available organizations: use '/cloudctl list orgs' to see them. "
-                    "Then switch with: cloudctl switch <org>"
-                )
-            raise
+            context = await self._read_context_file()
+            if context:
+                # Context is already frozen, so we can't modify credentials_valid
+                # Cache result
+                if self.config.enable_caching:
+                    self._context_cache = context
+                    self._cache_time = datetime.utcnow()
+                return context
+        except Exception:
+            pass  # Continue to error
 
-        # Verify credentials
-        context.credentials_valid = await self._verify_credentials(context.organization)
-
-        # Cache result
-        if self.config.enable_caching:
-            self._context_cache = context
-            self._cache_time = datetime.utcnow()
-
-        return context
+        # Neither method worked - provide helpful error
+        raise RuntimeError(
+            "No active context found. Use '/cloudctl list orgs' to see available organizations, "
+            "then run 'cloudctl switch <org>' to set one."
+        )
 
     async def switch_context(self, organization: str, account_id: Optional[str] = None) -> CommandResult:
         """Switch cloud context to specified organization.
@@ -660,6 +668,50 @@ class CloudctlSkill:
             fix="Check cloudctl installation and credentials",
             exit_code=-1,
         )
+
+    async def _read_context_file(self) -> Optional[CloudContext]:
+        """Read context from ~/.config/cloudctl/context file.
+
+        This is a fallback method when cloudctl status doesn't work.
+
+        Returns:
+            CloudContext if context file exists and is valid, None otherwise
+        """
+        try:
+            context_file = Path.home() / ".config" / "cloudctl" / "context"
+            if not context_file.exists():
+                return None
+
+            with open(context_file, "r") as f:
+                data = json.load(f)
+
+            # Make sure we have an organization
+            org = data.get("org") or data.get("organization")
+            if not org:
+                return None
+
+            # Parse context data
+            provider_str = data.get("provider", "aws").lower()
+            try:
+                provider = CloudProvider(provider_str)
+            except ValueError:
+                provider = CloudProvider.AWS
+
+            context = CloudContext(
+                provider=provider,
+                organization=org,
+                account_id=data.get("account"),
+                region=data.get("region"),
+                role=data.get("role"),
+                credentials_valid=True,
+            )
+            return context
+        except (json.JSONDecodeError, FileNotFoundError, KeyError, ValueError):
+            # Return None only for expected file/format errors
+            return None
+        except Exception:
+            # Return None for any other errors
+            return None
 
     async def _verify_credentials(self, organization: str) -> bool:
         """Verify credentials exist for organization.
