@@ -1,0 +1,95 @@
+{
+  "name": "cloudctl",
+  "display_name": "CloudctlSkill",
+  "version": "1.2.0",
+  "description": "Enterprise cloud context management skill for AWS, Azure, and GCP. Switch contexts, manage credentials, validate access, audit operations.",
+  "author": "Craig Hoad",
+  "license": "MIT",
+  "repository": "https://github.com/rhyscraig/cloudctl-skill",
+  "homepage": "https://github.com/rhyscraig/cloudctl-skill",
+  "documentation": "https://github.com/rhyscraig/cloudctl-skill/blob/main/README.md",
+  "keywords": [
+    "cloud",
+    "aws",
+    "gcp",
+    "azure",
+    "context-switching",
+    "credential-management",
+    "multi-cloud"
+  ],
+  "commands": {
+    "cloudctl": {
+      "description": "Cloud context management",
+      "examples": [
+        "/cloudctl context - Get current cloud context",
+        "/cloudctl switch production - Switch to production context",
+        "/cloudctl list orgs - List available organizations",
+        "/cloudctl check credentials - Verify all credentials",
+        "/cloudctl health - Run full health check"
+      ],
+      "usage": "/cloudctl <command> [args...]"
+    }
+  },
+  "capabilities": {
+    "get_context": "Get current cloud context (provider, organization, account, region)",
+    "switch_context": "Switch to a different organization/account",
+    "switch_region": "Switch AWS region",
+    "switch_project": "Switch GCP project",
+    "list_organizations": "List available cloud organizations",
+    "verify_credentials": "Verify credentials for an organization",
+    "get_token_status": "Get token status and expiry",
+    "check_all_credentials": "Check credentials across all clouds",
+    "login": "Login to an organization",
+    "health_check": "Run comprehensive health diagnostics",
+    "validate_switch": "Validate context switch operation",
+    "ensure_cloud_access": "Ensure access with auto-recovery"
+  },
+  "security": {
+    "credential_storage": "none",
+    "credential_handling": "environment_variables_only",
+    "validation": "pydantic_v2",
+    "audit_logging": "jsonl_format",
+    "pre_commit_hooks": true,
+    "security_tests": true,
+    "defense_in_depth": true
+  },
+  "requirements": {
+    "python": ">=3.12",
+    "external_tools": [
+      "cloudctl (command-line tool)"
+    ],
+    "environment_variables": [
+      "CLOUDCTL_PATH",
+      "CLOUDCTL_TIMEOUT",
+      "CLOUDCTL_RETRIES",
+      "CLOUDCTL_VERIFY",
+      "CLOUDCTL_AUDIT"
+    ]
+  },
+  "configuration": {
+    "config_file": ".cloudctl.yaml",
+    "config_example": ".cloudctl.example.yaml",
+    "local_config": true,
+    "environment_overrides": true
+  },
+  "testing": {
+    "unit_tests": 30,
+    "security_tests": 24,
+    "total_tests": 54,
+    "coverage": "100% core",
+    "async_support": true
+  },
+  "documentation": {
+    "api_reference": "docs/API.md",
+    "architecture": "docs/ARCHITECTURE.md",
+    "configuration": "docs/CONFIGURATION.md",
+    "security": "SECURITY.md",
+    "security_setup": "docs/SECURITY_SETUP.md",
+    "examples": "examples/"
+  },
+  "installation": {
+    "method": "pip",
+    "command": "pip install cloudctl-skill",
+    "from_source": "git clone https://github.com/rhyscraig/cloudctl-skill && cd cloudctl-skill && pip install -e ."
+  }
+}
