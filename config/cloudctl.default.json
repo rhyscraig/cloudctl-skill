@@ -1,0 +1,26 @@
+{
+  "cloudctl": {
+    "cloudctl_path": "cloudctl",
+    "timeout_seconds": 30,
+    "max_retries": 3,
+    "verify_context_after_switch": true,
+    "enable_audit_logging": true,
+    "enable_caching": true,
+    "cache_ttl_seconds": 300,
+    "dry_run": false
+  },
+  "environment_overrides": {
+    "AWS_REGION": "us-west-2",
+    "GCLOUD_PROJECT": null
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "~/.config/cloudctl/audit/operations.jsonl"
+  },
+  "validation": {
+    "require_context_after_switch": true,
+    "validate_credentials": true,
+    "check_organization_exists": true
+  }
+}

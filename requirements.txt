@@ -1,0 +1,21 @@
+# CloudctlSkill Requirements
+
+# Core dependencies
+pydantic>=2.0,<3.0           # Data validation and serialization
+pyyaml>=6.0                  # YAML configuration parsing
+rich>=13.0                   # Rich terminal output
+
+# Development dependencies (optional, for contributors)
+pytest>=9.0                  # Testing framework
+pytest-asyncio>=0.23         # Async test support
+pytest-mock>=3.10            # Mocking utilities
+pytest-cov>=4.0              # Code coverage
+
+# Code quality (optional)
+black>=23.0                  # Code formatting
+ruff>=0.0.260                # Linting
+mypy>=1.0                    # Type checking
+
+# Documentation (optional)
+sphinx>=6.0                  # Documentation generation
+sphinx-rtd-theme>=1.2        # ReadTheDocs theme

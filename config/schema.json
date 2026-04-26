@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CloudctlSkill Configuration Schema",
+  "description": "JSON Schema for validating CloudctlSkill configuration",
+  "type": "object",
+  "required": ["cloudctl"],
+  "properties": {
+    "cloudctl": {
+      "type": "object",
+      "title": "CloudctlSkill Settings",
+      "required": ["timeout_seconds", "max_retries"],
+      "properties": {
+        "cloudctl_path": {
+          "type": "string",
+          "description": "Path to cloudctl binary",
+          "default": "cloudctl"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Command timeout in seconds",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "Maximum number of retries for transient errors",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 3
+        },
+        "verify_context_after_switch": {
+          "type": "boolean",
+          "description": "Verify context after switching organizations",
+          "default": true
+        },
+        "enable_audit_logging": {
+          "type": "boolean",
+          "description": "Enable operation audit logging in JSONL format",
+          "default": true
+        },
+        "enable_caching": {
+          "type": "boolean",
+          "description": "Enable context caching for performance",
+          "default": true
+        },
+        "cache_ttl_seconds": {
+          "type": "integer",
+          "description": "Cache time-to-live in seconds",
+          "minimum": 0,
+          "maximum": 3600,
+          "default": 300
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Don't execute commands, only simulate",
+          "default": false
+        }
+      }
+    },
+    "environment_overrides": {
+      "type": "object",
+      "title": "Environment Variables",
+      "description": "Environment variables to override",
+      "properties": {
+        "AWS_REGION": {
+          "type": ["string", "null"],
+          "description": "AWS region override",
+          "pattern": "^[a-z]{2}-[a-z]+-\\d+$|^$|^null$"
+        },
+        "AWS_PROFILE": {
+          "type": ["string", "null"],
+          "description": "AWS profile to use"
+        },
+        "GCLOUD_PROJECT": {
+          "type": ["string", "null"],
+          "description": "GCP project ID"
+        },
+        "CLOUDSDK_CORE_PROJECT": {
+          "type": ["string", "null"],
+          "description": "GCP project (alternative)"
+        },
+        "AZURE_SUBSCRIPTION_ID": {
+          "type": ["string", "null"],
+          "description": "Azure subscription ID",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^$|^null$"
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "title": "Logging Configuration",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "default": "INFO"
+        },
+        "format": {
+          "type": "string",
+          "description": "Log format string",
+          "default": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        },
+        "file": {
+          "type": "string",
+          "description": "Log file path (supports ~ for home directory)"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "title": "Validation Rules",
+      "properties": {
+        "require_context_after_switch": {
+          "type": "boolean",
+          "description": "Require valid context after switching",
+          "default": true
+        },
+        "validate_credentials": {
+          "type": "boolean",
+          "description": "Validate credentials exist",
+          "default": true
+        },
+        "check_organization_exists": {
+          "type": "boolean",
+          "description": "Check organization exists before switching",
+          "default": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
