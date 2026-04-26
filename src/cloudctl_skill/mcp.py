@@ -53,14 +53,14 @@ class CloudctlMCPServer:
 
             elif method == "health":
                 result = await self.skill.health_check()
-                return {"result": result.model_dump()}
+                return {"result": result.model_dump(mode="json")}
 
             elif method == "token_status":
                 org = params.get("organization")
                 if not org:
                     return {"error": "organization parameter required"}
                 result = await self.skill.get_token_status(org)
-                return {"result": result.model_dump()}
+                return {"result": result.model_dump(mode="json")}
 
             elif method == "verify_credentials":
                 org = params.get("organization")

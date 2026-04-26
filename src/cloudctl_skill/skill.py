@@ -71,7 +71,16 @@ class CloudctlSkill:
             raise RuntimeError(f"Failed to get context: {result.error}")
 
         # Parse context from output
-        context = self._parse_context(result.output)
+        try:
+            context = self._parse_context(result.output)
+        except RuntimeError as e:
+            # Enhance error message with helpful guidance
+            if "no active context" in str(e).lower():
+                raise RuntimeError(
+                    f"{e}. Available organizations: use '/cloudctl list orgs' to see them. "
+                    "Then switch with: cloudctl switch <org>"
+                )
+            raise
 
         # Verify credentials
         context.credentials_valid = await self._verify_credentials(context.organization)
@@ -83,7 +92,7 @@ class CloudctlSkill:
 
         return context
 
-    async def switch_context(self, organization: str) -> CommandResult:
+    async def switch_context(self, organization: str, account_id: Optional[str] = None) -> CommandResult:
         """Switch cloud context to specified organization.
 
         Validates context switch and updates state. Automatically
@@ -91,6 +100,7 @@ class CloudctlSkill:
 
         Args:
             organization: Organization name
+            account_id: Optional account ID to switch to. If not provided, will list and use first.
 
         Returns:
             CommandResult with switch operation status
@@ -109,14 +119,48 @@ class CloudctlSkill:
         except RuntimeError:
             pass  # No prior context
 
-        # Attempt switch
+        # If no account specified, try to get first available account
+        if not account_id:
+            try:
+                accounts_result = await self._execute_cloudctl("accounts", organization)
+                if accounts_result.success:
+                    # Parse accounts output to find first account ID
+                    # Format is like: "624426145233 │ hcp-craighoad-prod  │       │"
+                    for line in accounts_result.output.split("\n"):
+                        if "│" in line and any(char.isdigit() for char in line):
+                            parts = line.split("│")
+                            if parts:
+                                potential_id = parts[0].strip()
+                                if potential_id.isdigit() and len(potential_id) == 12:
+                                    account_id = potential_id
+                                    break
+            except Exception:
+                pass  # If we can't get accounts, let cloudctl handle it interactively
+
+        # Attempt switch with or without account ID
         start_time = time.time()
-        result = await self._execute_cloudctl("switch", organization)
+        if account_id:
+            # Try switching with account ID (if supported)
+            result = await self._execute_cloudctl("switch", organization, "--account", account_id)
+            if not result.success:
+                # Fallback: try without account ID
+                result = await self._execute_cloudctl("switch", organization)
+        else:
+            result = await self._execute_cloudctl("switch", organization)
+
         duration = (time.time() - start_time) * 1000
 
         if not result.success:
+            # Check if it's an interactive prompt failure
+            if "input is not a terminal" in result.error.lower() or "select account" in result.error.lower():
+                result.error = (
+                    f"Unable to switch to '{organization}' non-interactively. "
+                    "Please run 'cloudctl switch {organization}' manually to set up context. "
+                    "Then /cloudctl commands will work."
+                )
+                result.fix = f"Run: cloudctl switch {organization}"
             # Try auto-refresh on token error
-            if "token" in result.error.lower() or "credential" in result.error.lower():
+            elif "token" in result.error.lower() or "credential" in result.error.lower():
                 refresh_result = await self.login(organization)
                 if refresh_result.success:
                     # Retry switch after refresh
