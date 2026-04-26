@@ -1,0 +1,121 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "cloudctl-skill"
+version = "1.2.0"
+description = "Enterprise-grade Claude skill for autonomous multi-cloud context management"
+authors = ["Craig Hoad <craig@craighoad.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rhyscraig/cloudctl-skill"
+homepage = "https://github.com/rhyscraig/cloudctl-skill"
+documentation = "https://github.com/rhyscraig/cloudctl-skill#documentation"
+keywords = [
+    "cloud",
+    "context-switching",
+    "aws",
+    "gcp",
+    "azure",
+    "multi-cloud",
+    "claude",
+    "skill",
+    "enterprise",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: System :: Systems Administration",
+    "Topic :: System :: Shells",
+    "Topic :: Security",
+]
+packages = [
+    { include = "cloudctl_skill", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.5.0"
+rich = "^14.3.0"
+pyyaml = "^6.0.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.0"
+pytest-cov = "^6.0.0"
+pytest-mock = "^3.12.0"
+pytest-asyncio = "^0.23.0"
+ruff = "^0.15.0"
+black = "^26.3.1"
+mypy = "^1.8.0"
+bandit = "^1.9.0"
+pip-audit = "^2.10.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v --strict-markers"
+markers = [
+    "unit: unit tests",
+    "integration: integration tests (requires cloudctl)",
+    "security: security tests",
+    "slow: slow tests",
+]
+
+[tool.coverage.run]
+source = ["cloudctl_skill"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__main__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == \"__main__\":",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "pass",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+select = [
+    "E", "F", "W",
+    "I",
+    "UP",
+    "B",
+    "C4",
+]
+ignore = [
+    "E501",
+    "ARG001",
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]

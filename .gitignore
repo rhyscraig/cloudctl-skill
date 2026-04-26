@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# CloudctlSkill specific
+.cloudctl.yaml
+.cloudctl.local.yaml
+
+# Audit logs
+~/.config/cloudctl/audit/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Credentials and secrets (should never be in git)
+credentials.json
+secrets.yaml
+*.pem
+*.key
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local development
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Poetry
+poetry.lock
+
+# Project specific
+dump.rdb
+*.log

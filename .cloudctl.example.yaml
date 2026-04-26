@@ -1,0 +1,134 @@
+# CloudctlSkill Configuration Example
+#
+# Copy this file to ~/.cloudctl.yaml or ./.cloudctl.yaml
+# and customize for your environment.
+#
+# Configuration precedence (highest to lowest):
+# 1. Environment variables (CLOUDCTL_*)
+# 2. ./.cloudctl.yaml (current directory)
+# 3. ~/.cloudctl.yaml (home directory)
+# 4. Default values
+
+# CloudctlSkill settings
+cloudctl:
+  # Path to cloudctl binary
+  # Default: "cloudctl" (must be in PATH)
+  # Examples:
+  #   cloudctl_path: "/usr/local/bin/cloudctl"
+  #   cloudctl_path: "$HOME/bin/cloudctl"
+  cloudctl_path: cloudctl
+
+  # Command timeout in seconds (1-300)
+  # Default: 30
+  # Increase if you have slow network or large organizations
+  timeout_seconds: 30
+
+  # Maximum retry attempts for transient errors
+  # Default: 3
+  # Uses exponential backoff: 1s, 2s, 4s...
+  max_retries: 3
+
+  # Verify context after switching
+  # Default: true
+  # Adds ~50ms per switch for verification
+  verify_context_after_switch: true
+
+  # Enable operation audit logging
+  # Default: true
+  # Logs written to: ~/.config/cloudctl/audit/operations_YYYYMMDD.jsonl
+  enable_audit_logging: true
+
+  # Dry-run mode (don't execute commands)
+  # Default: false
+  # Useful for testing configuration
+  dry_run: false
+
+  # Enable context caching
+  # Default: true
+  # Improves performance by caching context for cache_ttl_seconds
+  enable_caching: true
+
+  # Cache time-to-live in seconds (0-3600)
+  # Default: 300 (5 minutes)
+  # Set to 0 to effectively disable caching
+  cache_ttl_seconds: 300
+
+# Environment variable overrides
+# Set environment variables that your cloud CLIs need
+environment_overrides:
+  # AWS Configuration
+  AWS_REGION: us-west-2
+  # AWS_PROFILE: default
+  # AWS_ACCOUNT_ID: "123456789012"
+
+  # GCP Configuration
+  # GCLOUD_PROJECT: my-project
+  # CLOUDSDK_CORE_PROJECT: my-project
+
+  # Azure Configuration
+  # AZURE_SUBSCRIPTION_ID: "00000000-0000-0000-0000-000000000000"
+
+# ============================================================================
+# CONFIGURATION EXAMPLES
+# ============================================================================
+
+# Example 1: Development Setup
+# cloudctl:
+#   timeout_seconds: 60
+#   max_retries: 5
+#   verify_context_after_switch: true
+#   enable_audit_logging: true
+#   dry_run: false
+#   cache_ttl_seconds: 60
+# environment_overrides:
+#   AWS_REGION: us-east-1
+#   GCLOUD_PROJECT: dev-project
+
+# Example 2: CI/CD Setup
+# cloudctl:
+#   timeout_seconds: 300
+#   max_retries: 5
+#   verify_context_after_switch: true
+#   enable_audit_logging: false
+#   dry_run: false
+#   enable_caching: false
+# environment_overrides:
+#   AWS_REGION: us-west-2
+#   GCLOUD_PROJECT: prod-project
+
+# Example 3: Production Setup
+# cloudctl:
+#   timeout_seconds: 30
+#   max_retries: 3
+#   verify_context_after_switch: true
+#   enable_audit_logging: true
+#   dry_run: false
+#   enable_caching: true
+#   cache_ttl_seconds: 600
+# environment_overrides:
+#   AWS_REGION: eu-west-1
+#   GCLOUD_PROJECT: production
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# SECURITY:
+# - Never commit this file with actual credentials
+# - Use .gitignore to exclude .cloudctl.yaml from version control
+# - Keep .cloudctl.example.yaml as a template
+
+# ENVIRONMENT VARIABLES:
+# - Environment variables take precedence over config file settings
+# - Example: export CLOUDCTL_TIMEOUT=60
+# - See CONFIGURATION.md for complete list
+
+# DEBUGGING:
+# - Enable audit logging to see operation history
+# - View logs: cat ~/.config/cloudctl/audit/operations_$(date +%Y%m%d).jsonl
+# - Check config: cloudctl config get cloudctl_path
+
+# PERFORMANCE:
+# - Enable caching for better performance (default: enabled)
+# - Adjust cache_ttl_seconds based on your needs
+# - Increase timeout if you have slow network

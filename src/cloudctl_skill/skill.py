@@ -1,0 +1,676 @@
+"""CloudctlSkill — Enterprise-grade cloud context management."""
+
+import asyncio
+import json
+import os
+import re
+import subprocess
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Optional
+
+from .config import load_config
+from .models import (
+    CloudContext,
+    CloudProvider,
+    CommandResult,
+    CommandStatus,
+    HealthCheckResult,
+    OperationLog,
+    SkillConfig,
+    TokenStatus,
+)
+from .utils import setup_audit_logging, write_audit_log
+
+
+class CloudctlSkill:
+    """Enterprise cloud context management for Claude.
+
+    Provides autonomous multi-cloud context switching, credential management,
+    and audit logging for AWS, Azure, and GCP.
+
+    Attributes:
+        config: Skill configuration
+        _context_cache: Cached cloud context
+        _cache_time: When cache was created
+        _audit_logger: Path to audit log
+    """
+
+    def __init__(self, config: Optional[SkillConfig] = None) -> None:
+        """Initialize CloudctlSkill.
+
+        Args:
+            config: Optional SkillConfig. If None, loads from environment/files.
+        """
+        self.config = config or load_config()
+        self._context_cache: Optional[CloudContext] = None
+        self._cache_time: Optional[datetime] = None
+        self._audit_logger = setup_audit_logging() if self.config.enable_audit_logging else None
+
+    async def get_context(self) -> CloudContext:
+        """Get current cloud context.
+
+        Uses cached context if available and fresh, otherwise queries cloudctl.
+
+        Returns:
+            CloudContext: Current cloud context state
+
+        Raises:
+            RuntimeError: If unable to determine context
+        """
+        # Check cache
+        if self._context_cache and self._cache_time:
+            age = (datetime.utcnow() - self._cache_time).total_seconds()
+            if age < self.config.cache_ttl_seconds and self.config.enable_caching:
+                return self._context_cache
+
+        # Query cloudctl
+        result = await self._execute_cloudctl("context", "get")
+        if not result.success:
+            raise RuntimeError(f"Failed to get context: {result.error}")
+
+        # Parse context from output
+        context = self._parse_context(result.output)
+
+        # Verify credentials
+        context.credentials_valid = await self._verify_credentials(context.organization)
+
+        # Cache result
+        if self.config.enable_caching:
+            self._context_cache = context
+            self._cache_time = datetime.utcnow()
+
+        return context
+
+    async def switch_context(self, organization: str) -> CommandResult:
+        """Switch cloud context to specified organization.
+
+        Validates context switch and updates state. Automatically
+        refreshes token if expired.
+
+        Args:
+            organization: Organization name
+
+        Returns:
+            CommandResult with switch operation status
+
+        Raises:
+            ValueError: If organization name is empty
+            RuntimeError: If context switch fails
+        """
+        if not organization or not organization.strip():
+            raise ValueError("Organization name cannot be empty")
+
+        # Get context before switch
+        context_before = None
+        try:
+            context_before = await self.get_context()
+        except RuntimeError:
+            pass  # No prior context
+
+        # Attempt switch
+        start_time = time.time()
+        result = await self._execute_cloudctl("context", "switch", organization)
+        duration = (time.time() - start_time) * 1000
+
+        if not result.success:
+            # Try auto-refresh on token error
+            if "token" in result.error.lower() or "credential" in result.error.lower():
+                refresh_result = await self.login(organization)
+                if refresh_result.success:
+                    # Retry switch after refresh
+                    result = await self._execute_cloudctl("context", "switch", organization)
+
+        # Get context after switch
+        context_after = None
+        if result.success:
+            try:
+                context_after = await self.get_context()
+                # Invalidate cache to force fresh fetch
+                self._context_cache = None
+                self._cache_time = None
+            except RuntimeError:
+                pass
+
+        # Log operation
+        if self._audit_logger:
+            log = OperationLog(
+                operation="switch_context",
+                context_before=context_before.model_dump() if context_before else None,
+                context_after=context_after.model_dump() if context_after else None,
+                success=result.success,
+                error=result.error,
+                duration_ms=duration,
+            )
+            await write_audit_log(self._audit_logger, log)
+
+        return result
+
+    async def switch_region(self, region: str) -> CommandResult:
+        """Switch cloud region.
+
+        Args:
+            region: Region identifier (e.g., 'us-west-2', 'europe-west1')
+
+        Returns:
+            CommandResult with operation status
+        """
+        if not region or not region.strip():
+            raise ValueError("Region cannot be empty")
+
+        return await self._execute_cloudctl("context", "set-region", region)
+
+    async def switch_project(self, project_id: str) -> CommandResult:
+        """Switch GCP project.
+
+        Args:
+            project_id: GCP project ID
+
+        Returns:
+            CommandResult with operation status
+        """
+        if not project_id or not project_id.strip():
+            raise ValueError("Project ID cannot be empty")
+
+        return await self._execute_cloudctl("context", "set-project", project_id)
+
+    async def list_organizations(self) -> list[dict[str, str]]:
+        """List all available organizations.
+
+        Returns:
+            List of org dicts with 'name' and 'provider' keys
+
+        Raises:
+            RuntimeError: If unable to list organizations
+        """
+        result = await self._execute_cloudctl("org", "list", "--format", "json")
+        if not result.success:
+            raise RuntimeError(f"Failed to list organizations: {result.error}")
+
+        try:
+            orgs = json.loads(result.output)
+            return orgs if isinstance(orgs, list) else [orgs]
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse organization list: {e}")
+
+    async def verify_credentials(self, organization: str) -> bool:
+        """Verify credentials exist and are valid for organization.
+
+        Args:
+            organization: Organization name
+
+        Returns:
+            True if credentials valid, False otherwise
+        """
+        return await self._verify_credentials(organization)
+
+    async def login(self, organization: str) -> CommandResult:
+        """Login to organization and refresh credentials.
+
+        Args:
+            organization: Organization name to login to
+
+        Returns:
+            CommandResult with login status
+        """
+        if not organization or not organization.strip():
+            raise ValueError("Organization cannot be empty")
+
+        # Get current provider for this org
+        try:
+            context = await self.get_context()
+            if context.organization == organization:
+                provider = context.provider
+            else:
+                # Try to infer provider or use generic login
+                provider = CloudProvider.AWS
+        except RuntimeError:
+            provider = CloudProvider.AWS
+
+        # Execute provider-specific login
+        if provider == CloudProvider.GCP:
+            result = await self._execute_cloudctl("auth", "gcp-login", organization)
+        elif provider == CloudProvider.AZURE:
+            result = await self._execute_cloudctl("auth", "azure-login", organization)
+        else:  # AWS
+            result = await self._execute_cloudctl("auth", "aws-login", organization)
+
+        return result
+
+    async def get_token_status(self, organization: str) -> TokenStatus:
+        """Get token status for organization.
+
+        Args:
+            organization: Organization name
+
+        Returns:
+            TokenStatus with validity and expiration info
+
+        Raises:
+            RuntimeError: If unable to get token status
+        """
+        result = await self._execute_cloudctl("auth", "token-status", organization, "--format", "json")
+        if not result.success:
+            raise RuntimeError(f"Failed to get token status: {result.error}")
+
+        try:
+            data = json.loads(result.output)
+            return TokenStatus(**data)
+        except (json.JSONDecodeError, ValueError) as e:
+            raise RuntimeError(f"Failed to parse token status: {e}")
+
+    async def check_all_credentials(self) -> dict[str, dict[str, Any]]:
+        """Check credentials across all organizations.
+
+        Automatically refreshes expired tokens.
+
+        Returns:
+            Dict mapping org name to credential status
+
+        Raises:
+            RuntimeError: If unable to check credentials
+        """
+        try:
+            orgs = await self.list_organizations()
+        except RuntimeError as e:
+            raise RuntimeError(f"Failed to check credentials: {e}")
+
+        results = {}
+        for org in orgs:
+            org_name = org.get("name", "")
+            if not org_name:
+                continue
+
+            try:
+                status = await self.get_token_status(org_name)
+                results[org_name] = {
+                    "valid": status.valid,
+                    "expires_in_seconds": status.expires_in_seconds,
+                    "expired_at": status.expired_at.isoformat() if status.expired_at else None,
+                    "refreshed_at": status.refreshed_at.isoformat() if status.refreshed_at else None,
+                }
+
+                # Auto-refresh if expired or expiring soon (within 5 minutes)
+                if status.expires_in_seconds is not None and status.expires_in_seconds < 300:
+                    login_result = await self.login(org_name)
+                    results[org_name]["auto_refreshed"] = login_result.success
+            except RuntimeError as e:
+                results[org_name] = {
+                    "valid": False,
+                    "error": str(e),
+                }
+
+        return results
+
+    async def health_check(self) -> HealthCheckResult:
+        """Perform comprehensive health check.
+
+        Checks cloudctl installation, organizations, and credentials.
+
+        Returns:
+            HealthCheckResult with detailed health status
+        """
+        checks_passed = 0
+        checks_failed = 0
+
+        # Check cloudctl installation
+        cloudctl_installed = await self._is_cloudctl_installed()
+        if cloudctl_installed:
+            checks_passed += 1
+        else:
+            checks_failed += 1
+
+        # Get cloudctl version
+        cloudctl_version = None
+        if cloudctl_installed:
+            result = await self._execute_cloudctl("--version")
+            if result.success:
+                cloudctl_version = result.output.strip()
+                checks_passed += 1
+            else:
+                checks_failed += 1
+
+        # List organizations
+        organizations_available = 0
+        credentials_valid = {}
+        try:
+            orgs = await self.list_organizations()
+            organizations_available = len(orgs)
+            checks_passed += 1
+
+            # Check credentials for each org
+            for org in orgs:
+                org_name = org.get("name", "")
+                if org_name:
+                    try:
+                        is_valid = await self._verify_credentials(org_name)
+                        credentials_valid[org_name] = is_valid
+                        if is_valid:
+                            checks_passed += 1
+                        else:
+                            checks_failed += 1
+                    except RuntimeError:
+                        credentials_valid[org_name] = False
+                        checks_failed += 1
+        except RuntimeError:
+            checks_failed += 1
+
+        # Overall health: healthy if cloudctl installed and has valid orgs
+        is_healthy = cloudctl_installed and organizations_available > 0
+
+        return HealthCheckResult(
+            is_healthy=is_healthy,
+            cloudctl_installed=cloudctl_installed,
+            cloudctl_version=cloudctl_version,
+            organizations_available=organizations_available,
+            credentials_valid=credentials_valid,
+            checks_passed=checks_passed,
+            checks_failed=checks_failed,
+        )
+
+    async def ensure_cloud_access(self, organization: str) -> dict[str, Any]:
+        """Ensure access to cloud organization with auto-recovery.
+
+        Comprehensive check with automatic remediation:
+        - Verifies cloudctl is installed
+        - Checks organization exists
+        - Verifies credentials
+        - Auto-refreshes expired tokens
+        - Validates context switch
+
+        Args:
+            organization: Organization name to access
+
+        Returns:
+            Dict with keys:
+            - success (bool): Whether access is confirmed
+            - context (str): Current context string
+            - error (str): Error message if failed
+            - fix (str): Suggested remediation
+            - auto_refreshed (bool): Whether token was auto-refreshed
+
+        Raises:
+            ValueError: If organization is empty
+        """
+        if not organization or not organization.strip():
+            raise ValueError("Organization cannot be empty")
+
+        # Health check
+        health = await self.health_check()
+        if not health.cloudctl_installed:
+            return {
+                "success": False,
+                "context": None,
+                "error": "cloudctl not installed",
+                "fix": f"Install cloudctl from {self.config.cloudctl_path}",
+                "auto_refreshed": False,
+            }
+
+        # Verify organization exists
+        try:
+            orgs = await self.list_organizations()
+            org_names = [o.get("name", "") for o in orgs]
+            if organization not in org_names:
+                return {
+                    "success": False,
+                    "context": None,
+                    "error": f"Organization '{organization}' not found",
+                    "fix": f"Available organizations: {', '.join(org_names)}",
+                    "auto_refreshed": False,
+                }
+        except RuntimeError as e:
+            return {
+                "success": False,
+                "context": None,
+                "error": f"Failed to list organizations: {e}",
+                "fix": "Check cloudctl installation and credentials",
+                "auto_refreshed": False,
+            }
+
+        # Check and auto-refresh credentials
+        auto_refreshed = False
+        try:
+            status = await self.get_token_status(organization)
+            if not status.valid:
+                login_result = await self.login(organization)
+                if not login_result.success:
+                    return {
+                        "success": False,
+                        "context": None,
+                        "error": f"Failed to login: {login_result.error}",
+                        "fix": login_result.fix or "Try manual login",
+                        "auto_refreshed": False,
+                    }
+                auto_refreshed = True
+        except RuntimeError as e:
+            # Try login anyway
+            login_result = await self.login(organization)
+            if not login_result.success:
+                return {
+                    "success": False,
+                    "context": None,
+                    "error": f"Failed to login: {login_result.error}",
+                    "fix": login_result.fix or "Check credentials",
+                    "auto_refreshed": False,
+                }
+            auto_refreshed = True
+
+        # Switch to organization
+        switch_result = await self.switch_context(organization)
+        if not switch_result.success:
+            return {
+                "success": False,
+                "context": None,
+                "error": f"Failed to switch context: {switch_result.error}",
+                "fix": switch_result.fix or "Verify organization configuration",
+                "auto_refreshed": auto_refreshed,
+            }
+
+        # Get final context
+        try:
+            context = await self.get_context()
+            return {
+                "success": True,
+                "context": str(context),
+                "error": None,
+                "fix": None,
+                "auto_refreshed": auto_refreshed,
+            }
+        except RuntimeError as e:
+            return {
+                "success": False,
+                "context": None,
+                "error": f"Failed to verify context: {e}",
+                "fix": "Context may not be properly configured",
+                "auto_refreshed": auto_refreshed,
+            }
+
+    async def validate_switch(self) -> bool:
+        """Validate that context switch is working.
+
+        Returns:
+            True if context switching works, False otherwise
+        """
+        try:
+            await self.get_context()
+            return True
+        except RuntimeError:
+            return False
+
+    # Private methods
+
+    async def _execute_cloudctl(self, *args: str) -> CommandResult:
+        """Execute cloudctl command with retry logic.
+
+        Args:
+            *args: Command arguments
+
+        Returns:
+            CommandResult with output and status
+        """
+        if self.config.dry_run:
+            return CommandResult(
+                success=True,
+                status=CommandStatus.SUCCESS,
+                output=f"[DRY RUN] Would execute: {' '.join(args)}",
+            )
+
+        cmd = [self.config.cloudctl_path] + list(args)
+        last_error = None
+
+        for attempt in range(self.config.cloudctl_retries + 1):
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                try:
+                    stdout, stderr = await asyncio.wait_for(
+                        process.communicate(),
+                        timeout=self.config.cloudctl_timeout,
+                    )
+                except asyncio.TimeoutError:
+                    process.kill()
+                    return CommandResult(
+                        success=False,
+                        status=CommandStatus.FAILURE,
+                        error=f"Command timeout after {self.config.cloudctl_timeout}s",
+                        fix="Increase CLOUDCTL_TIMEOUT or check network connection",
+                        exit_code=-1,
+                    )
+
+                output = stdout.decode("utf-8", errors="replace").strip()
+                error = stderr.decode("utf-8", errors="replace").strip()
+
+                if process.returncode == 0:
+                    return CommandResult(
+                        success=True,
+                        status=CommandStatus.SUCCESS,
+                        output=output,
+                        exit_code=process.returncode,
+                    )
+
+                last_error = error or output
+
+                # Retry on transient errors
+                if attempt < self.config.cloudctl_retries:
+                    if "timeout" in error.lower() or "temporarily unavailable" in error.lower():
+                        await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                        continue
+
+                # Permanent error
+                return CommandResult(
+                    success=False,
+                    status=CommandStatus.FAILURE,
+                    output=output,
+                    error=error or "Unknown error",
+                    exit_code=process.returncode,
+                )
+
+            except FileNotFoundError:
+                return CommandResult(
+                    success=False,
+                    status=CommandStatus.FAILURE,
+                    error=f"cloudctl not found at {self.config.cloudctl_path}",
+                    fix=f"Install cloudctl or set CLOUDCTL_PATH",
+                    exit_code=-1,
+                )
+            except Exception as e:
+                last_error = str(e)
+                if attempt < self.config.cloudctl_retries:
+                    await asyncio.sleep(2 ** attempt)
+                    continue
+
+        return CommandResult(
+            success=False,
+            status=CommandStatus.FAILURE,
+            error=last_error or "Command failed after retries",
+            fix="Check cloudctl installation and credentials",
+            exit_code=-1,
+        )
+
+    async def _verify_credentials(self, organization: str) -> bool:
+        """Verify credentials exist for organization.
+
+        Args:
+            organization: Organization name
+
+        Returns:
+            True if credentials valid, False otherwise
+        """
+        try:
+            status = await self.get_token_status(organization)
+            return status.valid
+        except RuntimeError:
+            return False
+
+    async def _is_cloudctl_installed(self) -> bool:
+        """Check if cloudctl is installed and accessible.
+
+        Returns:
+            True if cloudctl found, False otherwise
+        """
+        result = await self._execute_cloudctl("--version")
+        return result.success
+
+    def _parse_context(self, output: str) -> CloudContext:
+        """Parse CloudContext from cloudctl output.
+
+        Expected format: 'aws:myorg account=123456789 role=terraform region=us-west-2'
+
+        Args:
+            output: Raw cloudctl output
+
+        Returns:
+            Parsed CloudContext
+
+        Raises:
+            RuntimeError: If unable to parse context
+        """
+        try:
+            parts = output.split()
+            if not parts:
+                raise ValueError("Empty context output")
+
+            # Parse provider:organization
+            provider_org = parts[0]
+            if ":" not in provider_org:
+                raise ValueError(f"Invalid context format: {provider_org}")
+
+            provider_str, org = provider_org.split(":", 1)
+
+            # Find provider
+            try:
+                provider = CloudProvider(provider_str)
+            except ValueError:
+                raise ValueError(f"Unknown provider: {provider_str}")
+
+            # Parse optional fields
+            account_id = None
+            region = None
+            role = None
+
+            for part in parts[1:]:
+                if "=" in part:
+                    key, value = part.split("=", 1)
+                    if key == "account":
+                        account_id = value
+                    elif key == "region":
+                        region = value
+                    elif key == "role":
+                        role = value
+
+            return CloudContext(
+                provider=provider,
+                organization=org,
+                account_id=account_id,
+                region=region,
+                role=role,
+                credentials_valid=True,
+            )
+
+        except (ValueError, IndexError) as e:
+            raise RuntimeError(f"Failed to parse context: {e}")
