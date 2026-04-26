@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="54" time="0.114" timestamp="2026-04-26T11:45:00.320959+01:00" hostname="Craigs-MacBook-Pro.local"><testcase classname="tests.test_cloudctl_skill.TestCloudProvider" name="test_provider_values" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCloudProvider" name="test_provider_from_string" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestTokenStatus" name="test_valid_token_status" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestTokenStatus" name="test_expired_token_status" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCommandResult" name="test_successful_result" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCommandResult" name="test_failed_result" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCloudContext" name="test_aws_context" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCloudContext" name="test_gcp_context" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCloudContext" name="test_context_string_representation" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestSkillConfig" name="test_default_config" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestSkillConfig" name="test_config_validation" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestOperationLog" name="test_operation_log_creation" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestOperationLog" name="test_operation_log_jsonl" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestConfiguration" name="test_config_from_env" time="0.002" /><testcase classname="tests.test_cloudctl_skill.TestConfiguration" name="test_config_validation_timeout" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestConfiguration" name="test_config_validation_retries" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestContextOperations" name="test_parse_context" time="0.001" /><testcase classname="tests.test_cloudctl_skill.TestContextOperations" name="test_parse_context_minimal" time="0.001" /><testcase classname="tests.test_cloudctl_skill.TestContextOperations" name="test_switch_context_invalid_org" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestContextOperations" name="test_switch_region_invalid_region" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestCredentials" name="test_verify_credentials_valid" time="0.001" /><testcase classname="tests.test_cloudctl_skill.TestCredentials" name="test_login_invalid_org" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestHealthCheck" name="test_health_check_result" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestMultiCloud" name="test_context_aws" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestMultiCloud" name="test_context_gcp" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestMultiCloud" name="test_azure_context" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestErrorHandling" name="test_execute_cloudctl_not_found" time="0.001" /><testcase classname="tests.test_cloudctl_skill.TestIntegration" name="test_skill_initialization" time="0.000" /><testcase classname="tests.test_cloudctl_skill.TestIntegration" name="test_default_skill_initialization" time="0.000" /><testcase classname="tests.test_cloudctl_skill" name="test_async_operations" time="0.001" /><testcase classname="tests.test_security.TestNoCredentialStorage" name="test_skill_config_has_no_credential_fields" time="0.000" /><testcase classname="tests.test_security.TestNoCredentialStorage" name="test_cloud_context_has_no_credentials" time="0.000" /><testcase classname="tests.test_security.TestNoCredentialStorage" name="test_skill_instance_has_no_credential_attributes" time="0.001" /><testcase classname="tests.test_security.TestNoCredentialStorage" name="test_no_credentials_in_cloudctlskill_init" time="0.000" /><testcase classname="tests.test_security.TestConfigurationSafety" name="test_example_yaml_has_no_secrets" time="0.000" /><testcase classname="tests.test_security.TestConfigurationSafety" name="test_config_validation_rejects_credentials" time="0.000"><failure message="ImportError: cannot import name '_validate_no_secrets' from 'cloudctl_skill.config' (/private/tmp/cloudctl-skill/src/cloudctl_skill/config.py)">tests/test_security.py:157: in test_config_validation_rejects_credentials
+    from cloudctl_skill.config import _validate_no_secrets
+E   ImportError: cannot import name '_validate_no_secrets' from 'cloudctl_skill.config' (/private/tmp/cloudctl-skill/src/cloudctl_skill/config.py)</failure></testcase><testcase classname="tests.test_security.TestConfigurationSafety" name="test_config_validation_allows_safe_keys" time="0.000"><failure message="ImportError: cannot import name '_validate_no_secrets' from 'cloudctl_skill.config' (/private/tmp/cloudctl-skill/src/cloudctl_skill/config.py)">tests/test_security.py:173: in test_config_validation_allows_safe_keys
+    from cloudctl_skill.config import _validate_no_secrets
+E   ImportError: cannot import name '_validate_no_secrets' from 'cloudctl_skill.config' (/private/tmp/cloudctl-skill/src/cloudctl_skill/config.py)</failure></testcase><testcase classname="tests.test_security.TestErrorMessageSafety" name="test_command_result_error_messages_generic" time="0.000"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CommandResult&#10;status&#10;  Field required [type=missing, input_value={'success': False, 'error...L_PATH and credentials'}, input_type=dict]&#10;    For further information visit https://errors.pydantic.dev/2.12/v/missing">tests/test_security.py:197: in test_command_result_error_messages_generic
+    result = CommandResult(
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CommandResult
+E   status
+E     Field required [type=missing, input_value={'success': False, 'error...L_PATH and credentials'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.12/v/missing</failure></testcase><testcase classname="tests.test_security.TestErrorMessageSafety" name="test_error_messages_have_helper_text" time="0.000"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CommandResult&#10;status&#10;  Field required [type=missing, input_value={'success': False, 'error...eck your configuration'}, input_type=dict]&#10;    For further information visit https://errors.pydantic.dev/2.12/v/missing">tests/test_security.py:219: in test_error_messages_have_helper_text
+    result = CommandResult(
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CommandResult
+E   status
+E     Field required [type=missing, input_value={'success': False, 'error...eck your configuration'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.12/v/missing</failure></testcase><testcase classname="tests.test_security.TestNoHardcodedSecrets" name="test_no_hardcoded_aws_keys_in_source" time="0.001" /><testcase classname="tests.test_security.TestNoHardcodedSecrets" name="test_no_hardcoded_private_keys" time="0.000" /><testcase classname="tests.test_security.TestNoHardcodedSecrets" name="test_no_credential_assignments_in_source" time="0.002" /><testcase classname="tests.test_security.TestConfigurationPrecedence" name="test_environment_variables_take_precedence" time="0.002" /><testcase classname="tests.test_security.TestConfigurationPrecedence" name="test_local_config_overrides_home_config" time="0.000" /><testcase classname="tests.test_security.TestConfigurationPrecedence" name="test_defaults_are_safe" time="0.000" /><testcase classname="tests.test_security.TestSubprocessIsolation" name="test_execute_cloudctl_does_not_store_credentials" time="0.002" /><testcase classname="tests.test_security.TestSubprocessIsolation" name="test_subprocess_command_does_not_leak_paths" time="0.000" /><testcase classname="tests.test_security.TestDocumentationSafety" name="test_readme_has_no_real_credentials" time="0.001"><failure message="AssertionError: Password mention in README without comment: echo &quot;password: test123&quot; &gt; test.txt&#10;assert '#' in 'echo &quot;password: test123&quot; &gt; test.txt'">tests/test_security.py:385: in test_readme_has_no_real_credentials
+    assert "#" in line, f"Password mention in README without comment: {line}"
+E   AssertionError: Password mention in README without comment: echo "password: test123" &gt; test.txt
+E   assert '#' in 'echo "password: test123" &gt; test.txt'</failure></testcase><testcase classname="tests.test_security.TestDocumentationSafety" name="test_examples_use_fake_data" time="0.002"><failure message="AssertionError: Real AWS key in /private/tmp/cloudctl-skill/examples/safe_configuration.py&#10;assert 'AKIA' not in '#!/usr/bin/env python3\n&quot;&quot;&quot;\nSafe Configuration Examples\n\nThis demonstrates the CORRECT way to handle configuration and credentials\nin CloudctlSkill. All credentials stay external to the code.\n&quot;&quot;&quot;\n\nimport asyncio\nimport os\nfrom pathlib import Path\n\nfrom cloudctl_skill import CloudctlSkill\n\n\nasync def example_1_environment_variables() -&gt; None:\n    &quot;&quot;&quot;Example 1: Using environment variables for credentials.\n\n    ✅ CORRECT - Credentials never touch the code\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 1: Environment Variables&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    # Credentials are set in the environment BEFORE running the script\n    # export AWS_ACCESS_KEY_ID=&quot;AKIA...&quot;\n    # export AWS_SECRET_ACCESS_KEY=&quot;...&quot;\n    # export GCLOUD_APPLICATION_CREDENTIALS=&quot;$HOME/.config/gcp/...&quot;\n\n    # The script never sees the actual credentials\n    # It only knows they\'re set\n    print(&quot;✅ Credentials are in environment, not in code&quot;)\n    print(f&quot;   AWS configured: {bool(os.environ.get(\'AWS_ACCESS_KEY_ID\'))}&quot;)\n    print(f&quot;   GCP configured: {bool(os.environ.get(\'GCLOUD_APPLICATION_CREDENTIALS\'))}&quot;)\n    print()\n\n    # CloudctlSkill passes them to the subprocess\n    skill = CloudctlSkill()\n    print(&quot;✅ CloudctlSkill created without touching credentials&quot;)\n    print()\n\n\nasync def example_2_local_configuration() -&gt; None:\n    &quot;&quot;&quot;Example 2: Using local configuration files.\n\n    ✅ CORRECT - Configuration is local, never in git\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 2: Local Configuration&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    # 1. Create local config (~/.cloudctl.yaml)\n    example_config = &quot;&quot;&quot;\n# ~/.cloudctl.yaml (NOT in git)\n\ncloudctl:\n  timeout_seconds: 30\n  max_retries: 3\n  verify_context_after_switch: true\n\nenvironment_overrides:\n  AWS_REGION: &quot;us-west-2&quot;\n  GCLOUD_PROJECT: &quot;my-project&quot;\n  # Credentials come from environment, NOT from this file\n&quot;&quot;&quot;\n\n    print(&quot;Local configuration (~/.cloudctl.yaml):&quot;)\n    print(example_config)\n\n    # 2. Show that credentials are NOT in this file\n    print(&quot;✅ Configuration contains only safe, non-sensitive settings&quot;)\n    print(&quot;✅ No credentials in the file&quot;)\n    print(&quot;✅ No real organization names&quot;)\n    print()\n\n    # 3. Load configuration (it\'s safe)\n    skill = CloudctlSkill()\n    print(f&quot;✅ Configuration loaded: timeout={skill.config.cloudctl_timeout}s&quot;)\n    print()\n\n\nasync def example_3_example_configuration() -&gt; None:\n    &quot;&quot;&quot;Example 3: Using .cloudctl.example.yaml as template.\n\n    ✅ CORRECT - Example shows structure, not real values\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 3: Example Configuration Template&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    example_template = &quot;&quot;&quot;\n# .cloudctl.example.yaml (IN git, shows structure only)\n\ncloudctl:\n  timeout_seconds: 30\n  max_retries: 3\n  verify_context_after_switch: true\n  enable_audit_logging: true\n\nenvironment_overrides:\n  AWS_REGION: us-west-2           # Example region\n  # GCLOUD_PROJECT: my-project    # Commented example\n  # AWS_PROFILE: default          # Commented example\n&quot;&quot;&quot;\n\n    print(&quot;Template configuration (.cloudctl.example.yaml):&quot;)\n    print(example_template)\n\n    print(&quot;✅ Example shows structure only&quot;)\n    print(&quot;✅ No real credentials&quot;)\n    print(&quot;✅ No real organization names&quot;)\n    print(&quot;✅ Safely committed to public git repository&quot;)\n    print()\n\n\nasync def example_4_what_not_to_do() -&gt; None:\n    &quot;&quot;&quot;Example 4: What NOT to do (anti-patterns).\n\n    ❌ WRONG WAYS - Never do this!\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 4: Anti-Patterns (What NOT to Do)&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    antipatterns = &quot;&quot;&quot;\n❌ ANTI-PATTERN 1: Hardcoding credentials in code\n    api_key = &quot;sk-12345&quot;  # NEVER!\n\n❌ ANTI-PATTERN 2: Real values in configuration\n    api_key: &quot;AKIA123456&quot;  # NEVER!\n    password: &quot;secret&quot;     # NEVER!\n\n❌ ANTI-PATTERN 3: Storing credentials in models\n    class CloudctlSkill:\n        def __init__(self, api_key: str):  # NEVER!\n            self.api_key = api_key\n\n❌ ANTI-PATTERN 4: Real values in example files\n    # .cloudctl.example.yaml\n    api_key: &quot;AKIA123456&quot;  # NEVER!\n\n❌ ANTI-PATTERN 5: Credentials as function parameters\n    async def login(api_key: str):  # NEVER!\n        pass\n\n❌ ANTI-PATTERN 6: Storing credentials in test fixtures\n    @pytest.fixture\n    def config():\n        return {&quot;api_key&quot;: &quot;AKIA123456&quot;}  # NEVER!\n\n❌ ANTI-PATTERN 7: Real values in documentation\n    # README.md\n    export AWS_ACCESS_KEY_ID=&quot;AKIA123456&quot;  # NEVER!\n\n❌ ANTI-PATTERN 8: Committing .cloudctl.yaml\n    git add .cloudctl.yaml  # NEVER! It\'s in .gitignore!\n&quot;&quot;&quot;\n\n    print(antipatterns)\n    print()\n\n\nasync def example_5_safe_error_handling() -&gt; None:\n    &quot;&quot;&quot;Example 5: Safe error messages that don\'t leak secrets.\n\n    ✅ CORRECT - Error messages are generic\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 5: Safe Error Handling&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    # ✅ CORRECT: Generic error messages\n    correct_examples = &quot;&quot;&quot;\n✅ CORRECT: Generic, helpful error messages\n\n    Error: &quot;Authentication failed&quot;\n    Fix: &quot;Check CLOUDCTL_PATH and credentials&quot;\n\n    Error: &quot;Organization not found&quot;\n    Fix: &quot;Run \'skill.list_organizations()\' to see available organizations&quot;\n\n    Error: &quot;Command timeout&quot;\n    Fix: &quot;Increase CLOUDCTL_TIMEOUT or check network connection&quot;\n&quot;&quot;&quot;\n\n    # ❌ WRONG: Credentials leak in error messages\n    wrong_examples = &quot;&quot;&quot;\n❌ WRONG: Error messages that leak credentials\n\n    Error: f&quot;Auth failed with API key {api_key}&quot;  # NEVER!\n    Error: f&quot;Failed with: {os.environ[\'AWS_SECRET_ACCESS_KEY\']}&quot;  # NEVER!\n    Error: f&quot;Command failed: {stderr}&quot;  # stderr might contain credentials!\n&quot;&quot;&quot;\n\n    print(correct_examples)\n    print(wrong_examples)\n    print(&quot;✅ CloudctlSkill only shows generic, safe error messages&quot;)\n    print()\n\n\nasync def example_6_safe_testing() -&gt; None:\n    &quot;&quot;&quot;Example 6: Safe testing with fake credentials.\n\n    ✅ CORRECT - Tests use fake data only\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 6: Safe Testing&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    test_code = &quot;&quot;&quot;\n# ✅ CORRECT: Test with fake credentials\n\n@pytest.fixture\ndef aws_context():\n    return CloudContext(\n        provider=CloudProvider.AWS,\n        organization=&quot;test-org&quot;,        # Fake\n        account_id=&quot;123456789012&quot;,      # Fake AWS account ID\n        region=&quot;us-west-2&quot;,\n        credentials_valid=True,\n    )\n\n@pytest.mark.asyncio\nasync def test_switch_context():\n    skill = CloudctlSkill()\n    with patch.object(skill, \'_execute_cloudctl\') as mock:\n        mock.return_value = CommandResult(success=True)\n        result = await skill.switch_context(&quot;test-org&quot;)\n        assert result.success is True\n\n\n# ❌ WRONG: Test with real credentials\n\n@pytest.fixture\ndef aws_context():\n    return CloudContext(\n        organization=&quot;production-org&quot;,          # Real! NEVER!\n        account_id=&quot;987654321012&quot;,             # Real AWS account! NEVER!\n        credentials_valid=True,\n    )\n\n# This fixture would fail the security test suite!\n&quot;&quot;&quot;\n\n    print(test_code)\n    print(&quot;✅ CloudctlSkill test suite uses fake data for all tests&quot;)\n    print()\n\n\nasync def example_7_credential_rotation() -&gt; None:\n    &quot;&quot;&quot;Example 7: Properly rotating credentials.\n\n    ✅ CORRECT - Credentials are rotated externally\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 7: Credential Rotation&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    print(&quot;✅ Proper credential rotation flow:&quot;)\n    print()\n    print(&quot;  1. Credentials stored externally (AWS IAM, GCP Console, etc.)&quot;)\n    print()\n    print(&quot;  2. Environment variables set before running:&quot;)\n    print(&quot;     $ export AWS_ACCESS_KEY_ID=\'new-key\'&quot;)\n    print(&quot;     $ export AWS_SECRET_ACCESS_KEY=\'new-secret\'&quot;)\n    print()\n    print(&quot;  3. CloudctlSkill uses environment variables (never hardcoded)&quot;)\n    print()\n    print(&quot;  4. Old credentials revoked in cloud provider&quot;)\n    print()\n    print(&quot;  Result: New credentials active, old ones disabled&quot;)\n    print()\n    print(&quot;  ✅ CloudctlSkill code never changes&quot;)\n    print(&quot;  ✅ No commits needed to rotate credentials&quot;)\n    print(&quot;  ✅ No credential history in git&quot;)\n    print()\n\n\nasync def example_8_checking_configuration() -&gt; None:\n    &quot;&quot;&quot;Example 8: Safely checking configuration.\n\n    ✅ CORRECT - Check configuration without showing secrets\n    &quot;&quot;&quot;\n    print(&quot;=&quot; * 70)\n    print(&quot;Example 8: Checking Configuration&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n\n    print(&quot;✅ CORRECT: Check configuration safely&quot;)\n    print()\n\n    skill = CloudctlSkill()\n\n    print(f&quot;  cloudctl_path: {skill.config.cloudctl_path}&quot;)\n    print(f&quot;  timeout: {skill.config.cloudctl_timeout}s&quot;)\n    print(f&quot;  retries: {skill.config.cloudctl_retries}&quot;)\n    print(f&quot;  caching: {skill.config.enable_caching}&quot;)\n    print()\n\n    print(&quot;  Environment is NOT shown (it\'s sensitive)&quot;)\n    print(&quot;  ✅ Configuration shown is non-sensitive only&quot;)\n    print()\n\n    # Check if environment is configured (without showing the values!)\n    print(&quot;✅ Credentials configuration check:&quot;)\n    print(f&quot;  AWS configured: {bool(os.environ.get(\'AWS_ACCESS_KEY_ID\'))}&quot;)\n    print(f&quot;  GCP configured: {bool(os.environ.get(\'GCLOUD_APPLICATION_CREDENTIALS\'))}&quot;)\n    print()\n\n\nasync def main() -&gt; None:\n    &quot;&quot;&quot;Run all examples.&quot;&quot;&quot;\n    print(&quot;\\n&quot;)\n    print(&quot;╔&quot; + &quot;=&quot; * 68 + &quot;╗&quot;)\n    print(&quot;║&quot; + &quot; &quot; * 68 + &quot;║&quot;)\n    print(&quot;║&quot; + &quot;  CloudctlSkill: Safe Configuration Examples&quot;.center(68) + &quot;║&quot;)\n    print(&quot;║&quot; + &quot; &quot; * 68 + &quot;║&quot;)\n    print(&quot;╚&quot; + &quot;=&quot; * 68 + &quot;╝&quot;)\n    print()\n\n    await example_1_environment_variables()\n    await example_2_local_configuration()\n    await example_3_example_configuration()\n    await example_4_what_not_to_do()\n    await example_5_safe_error_handling()\n    await example_6_safe_testing()\n    await example_7_credential_rotation()\n    await example_8_checking_configuration()\n\n    print(&quot;=&quot; * 70)\n    print(&quot;Summary&quot;)\n    print(&quot;=&quot; * 70)\n    print()\n    print(&quot;✅ All credentials stay EXTERNAL to CloudctlSkill&quot;)\n    print(&quot;✅ Configuration files contain NO secrets&quot;)\n    print(&quot;✅ Code never stores or handles credentials&quot;)\n    print(&quot;✅ Environment variables pass credentials to subprocess&quot;)\n    print(&quot;✅ subprocess (cloudctl) handles credentials internally&quot;)\n    print(&quot;✅ CloudctlSkill stays secret-free&quot;)\n    print()\n\n\nif __name__ == &quot;__main__&quot;:\n    asyncio.run(main())\n'&#10;  &#10;  'AKIA' is contained here:&#10;    #!/usr/bin/env python3&#10;    &quot;&quot;&quot;&#10;    Safe Configuration Examples&#10;    &#10;    This demonstrates the CORRECT way to handle configuration and credentials&#10;    in CloudctlSkill. All credentials stay external to the code.&#10;    &quot;&quot;&quot;&#10;    &#10;    import asyncio&#10;    import os&#10;    from pathlib import Path&#10;    &#10;    from cloudctl_skill import CloudctlSkill&#10;    &#10;    &#10;    async def example_1_environment_variables() -&gt; None:&#10;        &quot;&quot;&quot;Example 1: Using environment variables for credentials.&#10;    &#10;        ✅ CORRECT - Credentials never touch the code&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 1: Environment Variables&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        # Credentials are set in the environment BEFORE running the script&#10;        # export AWS_ACCESS_KEY_ID=&quot;AKIA...&quot;&#10;  ?                                 ++++&#10;        # export AWS_SECRET_ACCESS_KEY=&quot;...&quot;&#10;        # export GCLOUD_APPLICATION_CREDENTIALS=&quot;$HOME/.config/gcp/...&quot;&#10;    &#10;        # The script never sees the actual credentials&#10;        # It only knows they're set&#10;        print(&quot;✅ Credentials are in environment, not in code&quot;)&#10;        print(f&quot;   AWS configured: {bool(os.environ.get('AWS_ACCESS_KEY_ID'))}&quot;)&#10;        print(f&quot;   GCP configured: {bool(os.environ.get('GCLOUD_APPLICATION_CREDENTIALS'))}&quot;)&#10;        print()&#10;    &#10;        # CloudctlSkill passes them to the subprocess&#10;        skill = CloudctlSkill()&#10;        print(&quot;✅ CloudctlSkill created without touching credentials&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_2_local_configuration() -&gt; None:&#10;        &quot;&quot;&quot;Example 2: Using local configuration files.&#10;    &#10;        ✅ CORRECT - Configuration is local, never in git&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 2: Local Configuration&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        # 1. Create local config (~/.cloudctl.yaml)&#10;        example_config = &quot;&quot;&quot;&#10;    # ~/.cloudctl.yaml (NOT in git)&#10;    &#10;    cloudctl:&#10;      timeout_seconds: 30&#10;      max_retries: 3&#10;      verify_context_after_switch: true&#10;    &#10;    environment_overrides:&#10;      AWS_REGION: &quot;us-west-2&quot;&#10;      GCLOUD_PROJECT: &quot;my-project&quot;&#10;      # Credentials come from environment, NOT from this file&#10;    &quot;&quot;&quot;&#10;    &#10;        print(&quot;Local configuration (~/.cloudctl.yaml):&quot;)&#10;        print(example_config)&#10;    &#10;        # 2. Show that credentials are NOT in this file&#10;        print(&quot;✅ Configuration contains only safe, non-sensitive settings&quot;)&#10;        print(&quot;✅ No credentials in the file&quot;)&#10;        print(&quot;✅ No real organization names&quot;)&#10;        print()&#10;    &#10;        # 3. Load configuration (it's safe)&#10;        skill = CloudctlSkill()&#10;        print(f&quot;✅ Configuration loaded: timeout={skill.config.cloudctl_timeout}s&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_3_example_configuration() -&gt; None:&#10;        &quot;&quot;&quot;Example 3: Using .cloudctl.example.yaml as template.&#10;    &#10;        ✅ CORRECT - Example shows structure, not real values&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 3: Example Configuration Template&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        example_template = &quot;&quot;&quot;&#10;    # .cloudctl.example.yaml (IN git, shows structure only)&#10;    &#10;    cloudctl:&#10;      timeout_seconds: 30&#10;      max_retries: 3&#10;      verify_context_after_switch: true&#10;      enable_audit_logging: true&#10;    &#10;    environment_overrides:&#10;      AWS_REGION: us-west-2           # Example region&#10;      # GCLOUD_PROJECT: my-project    # Commented example&#10;      # AWS_PROFILE: default          # Commented example&#10;    &quot;&quot;&quot;&#10;    &#10;        print(&quot;Template configuration (.cloudctl.example.yaml):&quot;)&#10;        print(example_template)&#10;    &#10;        print(&quot;✅ Example shows structure only&quot;)&#10;        print(&quot;✅ No real credentials&quot;)&#10;        print(&quot;✅ No real organization names&quot;)&#10;        print(&quot;✅ Safely committed to public git repository&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_4_what_not_to_do() -&gt; None:&#10;        &quot;&quot;&quot;Example 4: What NOT to do (anti-patterns).&#10;    &#10;        ❌ WRONG WAYS - Never do this!&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 4: Anti-Patterns (What NOT to Do)&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        antipatterns = &quot;&quot;&quot;&#10;    ❌ ANTI-PATTERN 1: Hardcoding credentials in code&#10;        api_key = &quot;sk-12345&quot;  # NEVER!&#10;    &#10;    ❌ ANTI-PATTERN 2: Real values in configuration&#10;        api_key: &quot;AKIA123456&quot;  # NEVER!&#10;        password: &quot;secret&quot;     # NEVER!&#10;    &#10;    ❌ ANTI-PATTERN 3: Storing credentials in models&#10;        class CloudctlSkill:&#10;            def __init__(self, api_key: str):  # NEVER!&#10;                self.api_key = api_key&#10;    &#10;    ❌ ANTI-PATTERN 4: Real values in example files&#10;        # .cloudctl.example.yaml&#10;        api_key: &quot;AKIA123456&quot;  # NEVER!&#10;    &#10;    ❌ ANTI-PATTERN 5: Credentials as function parameters&#10;        async def login(api_key: str):  # NEVER!&#10;            pass&#10;    &#10;    ❌ ANTI-PATTERN 6: Storing credentials in test fixtures&#10;        @pytest.fixture&#10;        def config():&#10;            return {&quot;api_key&quot;: &quot;AKIA123456&quot;}  # NEVER!&#10;    &#10;    ❌ ANTI-PATTERN 7: Real values in documentation&#10;        # README.md&#10;        export AWS_ACCESS_KEY_ID=&quot;AKIA123456&quot;  # NEVER!&#10;    &#10;    ❌ ANTI-PATTERN 8: Committing .cloudctl.yaml&#10;        git add .cloudctl.yaml  # NEVER! It's in .gitignore!&#10;    &quot;&quot;&quot;&#10;    &#10;        print(antipatterns)&#10;        print()&#10;    &#10;    &#10;    async def example_5_safe_error_handling() -&gt; None:&#10;        &quot;&quot;&quot;Example 5: Safe error messages that don't leak secrets.&#10;    &#10;        ✅ CORRECT - Error messages are generic&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 5: Safe Error Handling&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        # ✅ CORRECT: Generic error messages&#10;        correct_examples = &quot;&quot;&quot;&#10;    ✅ CORRECT: Generic, helpful error messages&#10;    &#10;        Error: &quot;Authentication failed&quot;&#10;        Fix: &quot;Check CLOUDCTL_PATH and credentials&quot;&#10;    &#10;        Error: &quot;Organization not found&quot;&#10;        Fix: &quot;Run 'skill.list_organizations()' to see available organizations&quot;&#10;    &#10;        Error: &quot;Command timeout&quot;&#10;        Fix: &quot;Increase CLOUDCTL_TIMEOUT or check network connection&quot;&#10;    &quot;&quot;&quot;&#10;    &#10;        # ❌ WRONG: Credentials leak in error messages&#10;        wrong_examples = &quot;&quot;&quot;&#10;    ❌ WRONG: Error messages that leak credentials&#10;    &#10;        Error: f&quot;Auth failed with API key {api_key}&quot;  # NEVER!&#10;        Error: f&quot;Failed with: {os.environ['AWS_SECRET_ACCESS_KEY']}&quot;  # NEVER!&#10;        Error: f&quot;Command failed: {stderr}&quot;  # stderr might contain credentials!&#10;    &quot;&quot;&quot;&#10;    &#10;        print(correct_examples)&#10;        print(wrong_examples)&#10;        print(&quot;✅ CloudctlSkill only shows generic, safe error messages&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_6_safe_testing() -&gt; None:&#10;        &quot;&quot;&quot;Example 6: Safe testing with fake credentials.&#10;    &#10;        ✅ CORRECT - Tests use fake data only&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 6: Safe Testing&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        test_code = &quot;&quot;&quot;&#10;    # ✅ CORRECT: Test with fake credentials&#10;    &#10;    @pytest.fixture&#10;    def aws_context():&#10;        return CloudContext(&#10;            provider=CloudProvider.AWS,&#10;            organization=&quot;test-org&quot;,        # Fake&#10;            account_id=&quot;123456789012&quot;,      # Fake AWS account ID&#10;            region=&quot;us-west-2&quot;,&#10;            credentials_valid=True,&#10;        )&#10;    &#10;    @pytest.mark.asyncio&#10;    async def test_switch_context():&#10;        skill = CloudctlSkill()&#10;        with patch.object(skill, '_execute_cloudctl') as mock:&#10;            mock.return_value = CommandResult(success=True)&#10;            result = await skill.switch_context(&quot;test-org&quot;)&#10;            assert result.success is True&#10;    &#10;    &#10;    # ❌ WRONG: Test with real credentials&#10;    &#10;    @pytest.fixture&#10;    def aws_context():&#10;        return CloudContext(&#10;            organization=&quot;production-org&quot;,          # Real! NEVER!&#10;            account_id=&quot;987654321012&quot;,             # Real AWS account! NEVER!&#10;            credentials_valid=True,&#10;        )&#10;    &#10;    # This fixture would fail the security test suite!&#10;    &quot;&quot;&quot;&#10;    &#10;        print(test_code)&#10;        print(&quot;✅ CloudctlSkill test suite uses fake data for all tests&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_7_credential_rotation() -&gt; None:&#10;        &quot;&quot;&quot;Example 7: Properly rotating credentials.&#10;    &#10;        ✅ CORRECT - Credentials are rotated externally&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 7: Credential Rotation&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        print(&quot;✅ Proper credential rotation flow:&quot;)&#10;        print()&#10;        print(&quot;  1. Credentials stored externally (AWS IAM, GCP Console, etc.)&quot;)&#10;        print()&#10;        print(&quot;  2. Environment variables set before running:&quot;)&#10;        print(&quot;     $ export AWS_ACCESS_KEY_ID='new-key'&quot;)&#10;        print(&quot;     $ export AWS_SECRET_ACCESS_KEY='new-secret'&quot;)&#10;        print()&#10;        print(&quot;  3. CloudctlSkill uses environment variables (never hardcoded)&quot;)&#10;        print()&#10;        print(&quot;  4. Old credentials revoked in cloud provider&quot;)&#10;        print()&#10;        print(&quot;  Result: New credentials active, old ones disabled&quot;)&#10;        print()&#10;        print(&quot;  ✅ CloudctlSkill code never changes&quot;)&#10;        print(&quot;  ✅ No commits needed to rotate credentials&quot;)&#10;        print(&quot;  ✅ No credential history in git&quot;)&#10;        print()&#10;    &#10;    &#10;    async def example_8_checking_configuration() -&gt; None:&#10;        &quot;&quot;&quot;Example 8: Safely checking configuration.&#10;    &#10;        ✅ CORRECT - Check configuration without showing secrets&#10;        &quot;&quot;&quot;&#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Example 8: Checking Configuration&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;    &#10;        print(&quot;✅ CORRECT: Check configuration safely&quot;)&#10;        print()&#10;    &#10;        skill = CloudctlSkill()&#10;    &#10;        print(f&quot;  cloudctl_path: {skill.config.cloudctl_path}&quot;)&#10;        print(f&quot;  timeout: {skill.config.cloudctl_timeout}s&quot;)&#10;        print(f&quot;  retries: {skill.config.cloudctl_retries}&quot;)&#10;        print(f&quot;  caching: {skill.config.enable_caching}&quot;)&#10;        print()&#10;    &#10;        print(&quot;  Environment is NOT shown (it's sensitive)&quot;)&#10;        print(&quot;  ✅ Configuration shown is non-sensitive only&quot;)&#10;        print()&#10;    &#10;        # Check if environment is configured (without showing the values!)&#10;        print(&quot;✅ Credentials configuration check:&quot;)&#10;        print(f&quot;  AWS configured: {bool(os.environ.get('AWS_ACCESS_KEY_ID'))}&quot;)&#10;        print(f&quot;  GCP configured: {bool(os.environ.get('GCLOUD_APPLICATION_CREDENTIALS'))}&quot;)&#10;        print()&#10;    &#10;    &#10;    async def main() -&gt; None:&#10;        &quot;&quot;&quot;Run all examples.&quot;&quot;&quot;&#10;        print(&quot;\n&quot;)&#10;        print(&quot;╔&quot; + &quot;=&quot; * 68 + &quot;╗&quot;)&#10;        print(&quot;║&quot; + &quot; &quot; * 68 + &quot;║&quot;)&#10;        print(&quot;║&quot; + &quot;  CloudctlSkill: Safe Configuration Examples&quot;.center(68) + &quot;║&quot;)&#10;        print(&quot;║&quot; + &quot; &quot; * 68 + &quot;║&quot;)&#10;        print(&quot;╚&quot; + &quot;=&quot; * 68 + &quot;╝&quot;)&#10;        print()&#10;    &#10;        await example_1_environment_variables()&#10;        await example_2_local_configuration()&#10;        await example_3_example_configuration()&#10;        await example_4_what_not_to_do()&#10;        await example_5_safe_error_handling()&#10;        await example_6_safe_testing()&#10;        await example_7_credential_rotation()&#10;        await example_8_checking_configuration()&#10;    &#10;        print(&quot;=&quot; * 70)&#10;        print(&quot;Summary&quot;)&#10;        print(&quot;=&quot; * 70)&#10;        print()&#10;        print(&quot;✅ All credentials stay EXTERNAL to CloudctlSkill&quot;)&#10;        print(&quot;✅ Configuration files contain NO secrets&quot;)&#10;        print(&quot;✅ Code never stores or handles credentials&quot;)&#10;        print(&quot;✅ Environment variables pass credentials to subprocess&quot;)&#10;        print(&quot;✅ subprocess (cloudctl) handles credentials internally&quot;)&#10;        print(&quot;✅ CloudctlSkill stays secret-free&quot;)&#10;        print()&#10;    &#10;    &#10;    if __name__ == &quot;__main__&quot;:&#10;        asyncio.run(main())">tests/test_security.py:396: in test_examples_use_fake_data
+    assert "AKIA" not in content, f"Real AWS key in {example_file}"
+E   AssertionError: Real AWS key in /private/tmp/cloudctl-skill/examples/safe_configuration.py
+E   assert 'AKIA' not in '#!/usr/bin/env python3\n"""\nSafe Configuration Examples\n\nThis demonstrates the CORRECT way to handle configuration and credentials\nin CloudctlSkill. All credentials stay external to the code.\n"""\n\nimport asyncio\nimport os\nfrom pathlib import Path\n\nfrom cloudctl_skill import CloudctlSkill\n\n\nasync def example_1_environment_variables() -&gt; None:\n    """Example 1: Using environment variables for credentials.\n\n    ✅ CORRECT - Credentials never touch the code\n    """\n    print("=" * 70)\n    print("Example 1: Environment Variables")\n    print("=" * 70)\n    print()\n\n    # Credentials are set in the environment BEFORE running the script\n    # export AWS_ACCESS_KEY_ID="AKIA..."\n    # export AWS_SECRET_ACCESS_KEY="..."\n    # export GCLOUD_APPLICATION_CREDENTIALS="$HOME/.config/gcp/..."\n\n    # The script never sees the actual credentials\n    # It only knows they\'re set\n    print("✅ Credentials are in environment, not in code")\n    print(f"   AWS configured: {bool(os.environ.get(\'AWS_ACCESS_KEY_ID\'))}")\n    print(f"   GCP configured: {bool(os.environ.get(\'GCLOUD_APPLICATION_CREDENTIALS\'))}")\n    print()\n\n    # CloudctlSkill passes them to the subprocess\n    skill = CloudctlSkill()\n    print("✅ CloudctlSkill created without touching credentials")\n    print()\n\n\nasync def example_2_local_configuration() -&gt; None:\n    """Example 2: Using local configuration files.\n\n    ✅ CORRECT - Configuration is local, never in git\n    """\n    print("=" * 70)\n    print("Example 2: Local Configuration")\n    print("=" * 70)\n    print()\n\n    # 1. Create local config (~/.cloudctl.yaml)\n    example_config = """\n# ~/.cloudctl.yaml (NOT in git)\n\ncloudctl:\n  timeout_seconds: 30\n  max_retries: 3\n  verify_context_after_switch: true\n\nenvironment_overrides:\n  AWS_REGION: "us-west-2"\n  GCLOUD_PROJECT: "my-project"\n  # Credentials come from environment, NOT from this file\n"""\n\n    print("Local configuration (~/.cloudctl.yaml):")\n    print(example_config)\n\n    # 2. Show that credentials are NOT in this file\n    print("✅ Configuration contains only safe, non-sensitive settings")\n    print("✅ No credentials in the file")\n    print("✅ No real organization names")\n    print()\n\n    # 3. Load configuration (it\'s safe)\n    skill = CloudctlSkill()\n    print(f"✅ Configuration loaded: timeout={skill.config.cloudctl_timeout}s")\n    print()\n\n\nasync def example_3_example_configuration() -&gt; None:\n    """Example 3: Using .cloudctl.example.yaml as template.\n\n    ✅ CORRECT - Example shows structure, not real values\n    """\n    print("=" * 70)\n    print("Example 3: Example Configuration Template")\n    print("=" * 70)\n    print()\n\n    example_template = """\n# .cloudctl.example.yaml (IN git, shows structure only)\n\ncloudctl:\n  timeout_seconds: 30\n  max_retries: 3\n  verify_context_after_switch: true\n  enable_audit_logging: true\n\nenvironment_overrides:\n  AWS_REGION: us-west-2           # Example region\n  # GCLOUD_PROJECT: my-project    # Commented example\n  # AWS_PROFILE: default          # Commented example\n"""\n\n    print("Template configuration (.cloudctl.example.yaml):")\n    print(example_template)\n\n    print("✅ Example shows structure only")\n    print("✅ No real credentials")\n    print("✅ No real organization names")\n    print("✅ Safely committed to public git repository")\n    print()\n\n\nasync def example_4_what_not_to_do() -&gt; None:\n    """Example 4: What NOT to do (anti-patterns).\n\n    ❌ WRONG WAYS - Never do this!\n    """\n    print("=" * 70)\n    print("Example 4: Anti-Patterns (What NOT to Do)")\n    print("=" * 70)\n    print()\n\n    antipatterns = """\n❌ ANTI-PATTERN 1: Hardcoding credentials in code\n    api_key = "sk-12345"  # NEVER!\n\n❌ ANTI-PATTERN 2: Real values in configuration\n    api_key: "AKIA123456"  # NEVER!\n    password: "secret"     # NEVER!\n\n❌ ANTI-PATTERN 3: Storing credentials in models\n    class CloudctlSkill:\n        def __init__(self, api_key: str):  # NEVER!\n            self.api_key = api_key\n\n❌ ANTI-PATTERN 4: Real values in example files\n    # .cloudctl.example.yaml\n    api_key: "AKIA123456"  # NEVER!\n\n❌ ANTI-PATTERN 5: Credentials as function parameters\n    async def login(api_key: str):  # NEVER!\n        pass\n\n❌ ANTI-PATTERN 6: Storing credentials in test fixtures\n    @pytest.fixture\n    def config():\n        return {"api_key": "AKIA123456"}  # NEVER!\n\n❌ ANTI-PATTERN 7: Real values in documentation\n    # README.md\n    export AWS_ACCESS_KEY_ID="AKIA123456"  # NEVER!\n\n❌ ANTI-PATTERN 8: Committing .cloudctl.yaml\n    git add .cloudctl.yaml  # NEVER! It\'s in .gitignore!\n"""\n\n    print(antipatterns)\n    print()\n\n\nasync def example_5_safe_error_handling() -&gt; None:\n    """Example 5: Safe error messages that don\'t leak secrets.\n\n    ✅ CORRECT - Error messages are generic\n    """\n    print("=" * 70)\n    print("Example 5: Safe Error Handling")\n    print("=" * 70)\n    print()\n\n    # ✅ CORRECT: Generic error messages\n    correct_examples = """\n✅ CORRECT: Generic, helpful error messages\n\n    Error: "Authentication failed"\n    Fix: "Check CLOUDCTL_PATH and credentials"\n\n    Error: "Organization not found"\n    Fix: "Run \'skill.list_organizations()\' to see available organizations"\n\n    Error: "Command timeout"\n    Fix: "Increase CLOUDCTL_TIMEOUT or check network connection"\n"""\n\n    # ❌ WRONG: Credentials leak in error messages\n    wrong_examples = """\n❌ WRONG: Error messages that leak credentials\n\n    Error: f"Auth failed with API key {api_key}"  # NEVER!\n    Error: f"Failed with: {os.environ[\'AWS_SECRET_ACCESS_KEY\']}"  # NEVER!\n    Error: f"Command failed: {stderr}"  # stderr might contain credentials!\n"""\n\n    print(correct_examples)\n    print(wrong_examples)\n    print("✅ CloudctlSkill only shows generic, safe error messages")\n    print()\n\n\nasync def example_6_safe_testing() -&gt; None:\n    """Example 6: Safe testing with fake credentials.\n\n    ✅ CORRECT - Tests use fake data only\n    """\n    print("=" * 70)\n    print("Example 6: Safe Testing")\n    print("=" * 70)\n    print()\n\n    test_code = """\n# ✅ CORRECT: Test with fake credentials\n\n@pytest.fixture\ndef aws_context():\n    return CloudContext(\n        provider=CloudProvider.AWS,\n        organization="test-org",        # Fake\n        account_id="123456789012",      # Fake AWS account ID\n        region="us-west-2",\n        credentials_valid=True,\n    )\n\n@pytest.mark.asyncio\nasync def test_switch_context():\n    skill = CloudctlSkill()\n    with patch.object(skill, \'_execute_cloudctl\') as mock:\n        mock.return_value = CommandResult(success=True)\n        result = await skill.switch_context("test-org")\n        assert result.success is True\n\n\n# ❌ WRONG: Test with real credentials\n\n@pytest.fixture\ndef aws_context():\n    return CloudContext(\n        organization="production-org",          # Real! NEVER!\n        account_id="987654321012",             # Real AWS account! NEVER!\n        credentials_valid=True,\n    )\n\n# This fixture would fail the security test suite!\n"""\n\n    print(test_code)\n    print("✅ CloudctlSkill test suite uses fake data for all tests")\n    print()\n\n\nasync def example_7_credential_rotation() -&gt; None:\n    """Example 7: Properly rotating credentials.\n\n    ✅ CORRECT - Credentials are rotated externally\n    """\n    print("=" * 70)\n    print("Example 7: Credential Rotation")\n    print("=" * 70)\n    print()\n\n    print("✅ Proper credential rotation flow:")\n    print()\n    print("  1. Credentials stored externally (AWS IAM, GCP Console, etc.)")\n    print()\n    print("  2. Environment variables set before running:")\n    print("     $ export AWS_ACCESS_KEY_ID=\'new-key\'")\n    print("     $ export AWS_SECRET_ACCESS_KEY=\'new-secret\'")\n    print()\n    print("  3. CloudctlSkill uses environment variables (never hardcoded)")\n    print()\n    print("  4. Old credentials revoked in cloud provider")\n    print()\n    print("  Result: New credentials active, old ones disabled")\n    print()\n    print("  ✅ CloudctlSkill code never changes")\n    print("  ✅ No commits needed to rotate credentials")\n    print("  ✅ No credential history in git")\n    print()\n\n\nasync def example_8_checking_configuration() -&gt; None:\n    """Example 8: Safely checking configuration.\n\n    ✅ CORRECT - Check configuration without showing secrets\n    """\n    print("=" * 70)\n    print("Example 8: Checking Configuration")\n    print("=" * 70)\n    print()\n\n    print("✅ CORRECT: Check configuration safely")\n    print()\n\n    skill = CloudctlSkill()\n\n    print(f"  cloudctl_path: {skill.config.cloudctl_path}")\n    print(f"  timeout: {skill.config.cloudctl_timeout}s")\n    print(f"  retries: {skill.config.cloudctl_retries}")\n    print(f"  caching: {skill.config.enable_caching}")\n    print()\n\n    print("  Environment is NOT shown (it\'s sensitive)")\n    print("  ✅ Configuration shown is non-sensitive only")\n    print()\n\n    # Check if environment is configured (without showing the values!)\n    print("✅ Credentials configuration check:")\n    print(f"  AWS configured: {bool(os.environ.get(\'AWS_ACCESS_KEY_ID\'))}")\n    print(f"  GCP configured: {bool(os.environ.get(\'GCLOUD_APPLICATION_CREDENTIALS\'))}")\n    print()\n\n\nasync def main() -&gt; None:\n    """Run all examples."""\n    print("\\n")\n    print("╔" + "=" * 68 + "╗")\n    print("║" + " " * 68 + "║")\n    print("║" + "  CloudctlSkill: Safe Configuration Examples".center(68) + "║")\n    print("║" + " " * 68 + "║")\n    print("╚" + "=" * 68 + "╝")\n    print()\n\n    await example_1_environment_variables()\n    await example_2_local_configuration()\n    await example_3_example_configuration()\n    await example_4_what_not_to_do()\n    await example_5_safe_error_handling()\n    await example_6_safe_testing()\n    await example_7_credential_rotation()\n    await example_8_checking_configuration()\n\n    print("=" * 70)\n    print("Summary")\n    print("=" * 70)\n    print()\n    print("✅ All credentials stay EXTERNAL to CloudctlSkill")\n    print("✅ Configuration files contain NO secrets")\n    print("✅ Code never stores or handles credentials")\n    print("✅ Environment variables pass credentials to subprocess")\n    print("✅ subprocess (cloudctl) handles credentials internally")\n    print("✅ CloudctlSkill stays secret-free")\n    print()\n\n\nif __name__ == "__main__":\n    asyncio.run(main())\n'
+E     
+E     'AKIA' is contained here:
+E       #!/usr/bin/env python3
+E       """
+E       Safe Configuration Examples
+E       
+E       This demonstrates the CORRECT way to handle configuration and credentials
+E       in CloudctlSkill. All credentials stay external to the code.
+E       """
+E       
+E       import asyncio
+E       import os
+E       from pathlib import Path
+E       
+E       from cloudctl_skill import CloudctlSkill
+E       
+E       
+E       async def example_1_environment_variables() -&gt; None:
+E           """Example 1: Using environment variables for credentials.
+E       
+E           ✅ CORRECT - Credentials never touch the code
+E           """
+E           print("=" * 70)
+E           print("Example 1: Environment Variables")
+E           print("=" * 70)
+E           print()
+E       
+E           # Credentials are set in the environment BEFORE running the script
+E           # export AWS_ACCESS_KEY_ID="AKIA..."
+E     ?                                 ++++
+E           # export AWS_SECRET_ACCESS_KEY="..."
+E           # export GCLOUD_APPLICATION_CREDENTIALS="$HOME/.config/gcp/..."
+E       
+E           # The script never sees the actual credentials
+E           # It only knows they're set
+E           print("✅ Credentials are in environment, not in code")
+E           print(f"   AWS configured: {bool(os.environ.get('AWS_ACCESS_KEY_ID'))}")
+E           print(f"   GCP configured: {bool(os.environ.get('GCLOUD_APPLICATION_CREDENTIALS'))}")
+E           print()
+E       
+E           # CloudctlSkill passes them to the subprocess
+E           skill = CloudctlSkill()
+E           print("✅ CloudctlSkill created without touching credentials")
+E           print()
+E       
+E       
+E       async def example_2_local_configuration() -&gt; None:
+E           """Example 2: Using local configuration files.
+E       
+E           ✅ CORRECT - Configuration is local, never in git
+E           """
+E           print("=" * 70)
+E           print("Example 2: Local Configuration")
+E           print("=" * 70)
+E           print()
+E       
+E           # 1. Create local config (~/.cloudctl.yaml)
+E           example_config = """
+E       # ~/.cloudctl.yaml (NOT in git)
+E       
+E       cloudctl:
+E         timeout_seconds: 30
+E         max_retries: 3
+E         verify_context_after_switch: true
+E       
+E       environment_overrides:
+E         AWS_REGION: "us-west-2"
+E         GCLOUD_PROJECT: "my-project"
+E         # Credentials come from environment, NOT from this file
+E       """
+E       
+E           print("Local configuration (~/.cloudctl.yaml):")
+E           print(example_config)
+E       
+E           # 2. Show that credentials are NOT in this file
+E           print("✅ Configuration contains only safe, non-sensitive settings")
+E           print("✅ No credentials in the file")
+E           print("✅ No real organization names")
+E           print()
+E       
+E           # 3. Load configuration (it's safe)
+E           skill = CloudctlSkill()
+E           print(f"✅ Configuration loaded: timeout={skill.config.cloudctl_timeout}s")
+E           print()
+E       
+E       
+E       async def example_3_example_configuration() -&gt; None:
+E           """Example 3: Using .cloudctl.example.yaml as template.
+E       
+E           ✅ CORRECT - Example shows structure, not real values
+E           """
+E           print("=" * 70)
+E           print("Example 3: Example Configuration Template")
+E           print("=" * 70)
+E           print()
+E       
+E           example_template = """
+E       # .cloudctl.example.yaml (IN git, shows structure only)
+E       
+E       cloudctl:
+E         timeout_seconds: 30
+E         max_retries: 3
+E         verify_context_after_switch: true
+E         enable_audit_logging: true
+E       
+E       environment_overrides:
+E         AWS_REGION: us-west-2           # Example region
+E         # GCLOUD_PROJECT: my-project    # Commented example
+E         # AWS_PROFILE: default          # Commented example
+E       """
+E       
+E           print("Template configuration (.cloudctl.example.yaml):")
+E           print(example_template)
+E       
+E           print("✅ Example shows structure only")
+E           print("✅ No real credentials")
+E           print("✅ No real organization names")
+E           print("✅ Safely committed to public git repository")
+E           print()
+E       
+E       
+E       async def example_4_what_not_to_do() -&gt; None:
+E           """Example 4: What NOT to do (anti-patterns).
+E       
+E           ❌ WRONG WAYS - Never do this!
+E           """
+E           print("=" * 70)
+E           print("Example 4: Anti-Patterns (What NOT to Do)")
+E           print("=" * 70)
+E           print()
+E       
+E           antipatterns = """
+E       ❌ ANTI-PATTERN 1: Hardcoding credentials in code
+E           api_key = "sk-12345"  # NEVER!
+E       
+E       ❌ ANTI-PATTERN 2: Real values in configuration
+E           api_key: "AKIA123456"  # NEVER!
+E           password: "secret"     # NEVER!
+E       
+E       ❌ ANTI-PATTERN 3: Storing credentials in models
+E           class CloudctlSkill:
+E               def __init__(self, api_key: str):  # NEVER!
+E                   self.api_key = api_key
+E       
+E       ❌ ANTI-PATTERN 4: Real values in example files
+E           # .cloudctl.example.yaml
+E           api_key: "AKIA123456"  # NEVER!
+E       
+E       ❌ ANTI-PATTERN 5: Credentials as function parameters
+E           async def login(api_key: str):  # NEVER!
+E               pass
+E       
+E       ❌ ANTI-PATTERN 6: Storing credentials in test fixtures
+E           @pytest.fixture
+E           def config():
+E               return {"api_key": "AKIA123456"}  # NEVER!
+E       
+E       ❌ ANTI-PATTERN 7: Real values in documentation
+E           # README.md
+E           export AWS_ACCESS_KEY_ID="AKIA123456"  # NEVER!
+E       
+E       ❌ ANTI-PATTERN 8: Committing .cloudctl.yaml
+E           git add .cloudctl.yaml  # NEVER! It's in .gitignore!
+E       """
+E       
+E           print(antipatterns)
+E           print()
+E       
+E       
+E       async def example_5_safe_error_handling() -&gt; None:
+E           """Example 5: Safe error messages that don't leak secrets.
+E       
+E           ✅ CORRECT - Error messages are generic
+E           """
+E           print("=" * 70)
+E           print("Example 5: Safe Error Handling")
+E           print("=" * 70)
+E           print()
+E       
+E           # ✅ CORRECT: Generic error messages
+E           correct_examples = """
+E       ✅ CORRECT: Generic, helpful error messages
+E       
+E           Error: "Authentication failed"
+E           Fix: "Check CLOUDCTL_PATH and credentials"
+E       
+E           Error: "Organization not found"
+E           Fix: "Run 'skill.list_organizations()' to see available organizations"
+E       
+E           Error: "Command timeout"
+E           Fix: "Increase CLOUDCTL_TIMEOUT or check network connection"
+E       """
+E       
+E           # ❌ WRONG: Credentials leak in error messages
+E           wrong_examples = """
+E       ❌ WRONG: Error messages that leak credentials
+E       
+E           Error: f"Auth failed with API key {api_key}"  # NEVER!
+E           Error: f"Failed with: {os.environ['AWS_SECRET_ACCESS_KEY']}"  # NEVER!
+E           Error: f"Command failed: {stderr}"  # stderr might contain credentials!
+E       """
+E       
+E           print(correct_examples)
+E           print(wrong_examples)
+E           print("✅ CloudctlSkill only shows generic, safe error messages")
+E           print()
+E       
+E       
+E       async def example_6_safe_testing() -&gt; None:
+E           """Example 6: Safe testing with fake credentials.
+E       
+E           ✅ CORRECT - Tests use fake data only
+E           """
+E           print("=" * 70)
+E           print("Example 6: Safe Testing")
+E           print("=" * 70)
+E           print()
+E       
+E           test_code = """
+E       # ✅ CORRECT: Test with fake credentials
+E       
+E       @pytest.fixture
+E       def aws_context():
+E           return CloudContext(
+E               provider=CloudProvider.AWS,
+E               organization="test-org",        # Fake
+E               account_id="123456789012",      # Fake AWS account ID
+E               region="us-west-2",
+E               credentials_valid=True,
+E           )
+E       
+E       @pytest.mark.asyncio
+E       async def test_switch_context():
+E           skill = CloudctlSkill()
+E           with patch.object(skill, '_execute_cloudctl') as mock:
+E               mock.return_value = CommandResult(success=True)
+E               result = await skill.switch_context("test-org")
+E               assert result.success is True
+E       
+E       
+E       # ❌ WRONG: Test with real credentials
+E       
+E       @pytest.fixture
+E       def aws_context():
+E           return CloudContext(
+E               organization="production-org",          # Real! NEVER!
+E               account_id="987654321012",             # Real AWS account! NEVER!
+E               credentials_valid=True,
+E           )
+E       
+E       # This fixture would fail the security test suite!
+E       """
+E       
+E           print(test_code)
+E           print("✅ CloudctlSkill test suite uses fake data for all tests")
+E           print()
+E       
+E       
+E       async def example_7_credential_rotation() -&gt; None:
+E           """Example 7: Properly rotating credentials.
+E       
+E           ✅ CORRECT - Credentials are rotated externally
+E           """
+E           print("=" * 70)
+E           print("Example 7: Credential Rotation")
+E           print("=" * 70)
+E           print()
+E       
+E           print("✅ Proper credential rotation flow:")
+E           print()
+E           print("  1. Credentials stored externally (AWS IAM, GCP Console, etc.)")
+E           print()
+E           print("  2. Environment variables set before running:")
+E           print("     $ export AWS_ACCESS_KEY_ID='new-key'")
+E           print("     $ export AWS_SECRET_ACCESS_KEY='new-secret'")
+E           print()
+E           print("  3. CloudctlSkill uses environment variables (never hardcoded)")
+E           print()
+E           print("  4. Old credentials revoked in cloud provider")
+E           print()
+E           print("  Result: New credentials active, old ones disabled")
+E           print()
+E           print("  ✅ CloudctlSkill code never changes")
+E           print("  ✅ No commits needed to rotate credentials")
+E           print("  ✅ No credential history in git")
+E           print()
+E       
+E       
+E       async def example_8_checking_configuration() -&gt; None:
+E           """Example 8: Safely checking configuration.
+E       
+E           ✅ CORRECT - Check configuration without showing secrets
+E           """
+E           print("=" * 70)
+E           print("Example 8: Checking Configuration")
+E           print("=" * 70)
+E           print()
+E       
+E           print("✅ CORRECT: Check configuration safely")
+E           print()
+E       
+E           skill = CloudctlSkill()
+E       
+E           print(f"  cloudctl_path: {skill.config.cloudctl_path}")
+E           print(f"  timeout: {skill.config.cloudctl_timeout}s")
+E           print(f"  retries: {skill.config.cloudctl_retries}")
+E           print(f"  caching: {skill.config.enable_caching}")
+E           print()
+E       
+E           print("  Environment is NOT shown (it's sensitive)")
+E           print("  ✅ Configuration shown is non-sensitive only")
+E           print()
+E       
+E           # Check if environment is configured (without showing the values!)
+E           print("✅ Credentials configuration check:")
+E           print(f"  AWS configured: {bool(os.environ.get('AWS_ACCESS_KEY_ID'))}")
+E           print(f"  GCP configured: {bool(os.environ.get('GCLOUD_APPLICATION_CREDENTIALS'))}")
+E           print()
+E       
+E       
+E       async def main() -&gt; None:
+E           """Run all examples."""
+E           print("\n")
+E           print("╔" + "=" * 68 + "╗")
+E           print("║" + " " * 68 + "║")
+E           print("║" + "  CloudctlSkill: Safe Configuration Examples".center(68) + "║")
+E           print("║" + " " * 68 + "║")
+E           print("╚" + "=" * 68 + "╝")
+E           print()
+E       
+E           await example_1_environment_variables()
+E           await example_2_local_configuration()
+E           await example_3_example_configuration()
+E           await example_4_what_not_to_do()
+E           await example_5_safe_error_handling()
+E           await example_6_safe_testing()
+E           await example_7_credential_rotation()
+E           await example_8_checking_configuration()
+E       
+E           print("=" * 70)
+E           print("Summary")
+E           print("=" * 70)
+E           print()
+E           print("✅ All credentials stay EXTERNAL to CloudctlSkill")
+E           print("✅ Configuration files contain NO secrets")
+E           print("✅ Code never stores or handles credentials")
+E           print("✅ Environment variables pass credentials to subprocess")
+E           print("✅ subprocess (cloudctl) handles credentials internally")
+E           print("✅ CloudctlSkill stays secret-free")
+E           print()
+E       
+E       
+E       if __name__ == "__main__":
+E           asyncio.run(main())</failure></testcase><testcase classname="tests.test_security.TestGitignoreCorrect" name="test_gitignore_excludes_local_config" time="0.000" /><testcase classname="tests.test_security.TestGitignoreCorrect" name="test_gitignore_excludes_env_files" time="0.000" /><testcase classname="tests.test_security.TestGitignoreCorrect" name="test_gitignore_excludes_keys" time="0.000" /><testcase classname="tests.test_security.TestSecuritySummary" name="test_all_security_checks_pass" time="0.000" /><testcase classname="tests.test_security.TestSecuritySummary" name="test_security_documentation_exists" time="0.000" /></testsuite></testsuites>

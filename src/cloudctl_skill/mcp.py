@@ -1,133 +1,306 @@
 """MCP (Model Context Protocol) server for CloudctlSkill.
 
-This module provides the MCP interface for CloudctlSkill, enabling integration
-with Claude and other LLM applications via the Model Context Protocol.
+This module implements the MCP server protocol, exposing CloudctlSkill
+functionality to Claude and other MCP clients via FastMCP.
+
+The server exposes the following tools:
+- cloudctl_context: Get current cloud context
+- cloudctl_list_orgs: List configured organizations
+- cloudctl_switch: Switch to a different organization
+- cloudctl_health: Run health diagnostics
+- cloudctl_check_credentials: Verify all credentials
+- cloudctl_token_status: Get token status for organization
+- cloudctl_verify_credentials: Verify access to organization
+- cloudctl_switch_region: Switch AWS region
+- cloudctl_switch_project: Switch GCP project
+- cloudctl_ensure_access: Ensure access with recovery
+- cloudctl_validate_switch: Validate last context switch
+- cloudctl_login: Initiate SSO login
 """
 
-import asyncio
 import json
+import logging
 import sys
-from typing import Any, Optional
+from typing import Any
+
+from mcp.server import FastMCP
+from mcp.types import TextContent
 
 from cloudctl_skill import CloudctlSkill
 
+# Set up logging (to stderr to not interfere with stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stderr,
+)
+logger = logging.getLogger(__name__)
 
-class CloudctlMCPServer:
-    """MCP server for CloudctlSkill."""
-
-    def __init__(self):
-        """Initialize the MCP server."""
-        self.skill = CloudctlSkill()
-
-    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any]:
-        """Handle MCP request.
-
-        Args:
-            request: MCP request with method and params
-
-        Returns:
-            MCP response with result or error
-        """
-        try:
-            method = request.get("method")
-            params = request.get("params", {})
-
-            if method == "context":
-                result = await self.skill.get_context()
-                return {"result": str(result)}
-
-            elif method == "switch":
-                org = params.get("organization")
-                if not org:
-                    return {"error": "organization parameter required"}
-                result = await self.skill.switch_context(org)
-                return {"result": result.model_dump(mode="json")}
-
-            elif method == "list_orgs":
-                result = await self.skill.list_organizations()
-                return {"result": result}
-
-            elif method == "check_credentials":
-                result = await self.skill.check_all_credentials()
-                return {"result": result}
-
-            elif method == "health":
-                result = await self.skill.health_check()
-                return {"result": result.model_dump(mode="json")}
-
-            elif method == "token_status":
-                org = params.get("organization")
-                if not org:
-                    return {"error": "organization parameter required"}
-                result = await self.skill.get_token_status(org)
-                return {"result": result.model_dump(mode="json")}
-
-            elif method == "verify_credentials":
-                org = params.get("organization")
-                if not org:
-                    return {"error": "organization parameter required"}
-                result = await self.skill.verify_credentials(org)
-                return {"result": result}
-
-            elif method == "switch_region":
-                region = params.get("region")
-                if not region:
-                    return {"error": "region parameter required"}
-                result = await self.skill.switch_region(region)
-                return {"result": result.model_dump(mode="json")}
-
-            elif method == "switch_project":
-                project = params.get("project")
-                if not project:
-                    return {"error": "project parameter required"}
-                result = await self.skill.switch_project(project)
-                return {"result": result.model_dump(mode="json")}
-
-            elif method == "ensure_access":
-                org = params.get("organization")
-                if not org:
-                    return {"error": "organization parameter required"}
-                result = await self.skill.ensure_cloud_access(org)
-                return {"result": result}
-
-            elif method == "validate_switch":
-                result = await self.skill.validate_switch()
-                return {"result": result}
-
-            elif method == "login":
-                org = params.get("organization")
-                if not org:
-                    return {"error": "organization parameter required"}
-                result = await self.skill.login(org)
-                return {"result": result.model_dump(mode="json")}
-
-            else:
-                return {"error": f"Unknown method: {method}"}
-
-        except Exception as e:
-            return {"error": f"Error: {str(e)}"}
+# Create MCP server using FastMCP
+mcp = FastMCP("cloudctl-skill")
 
 
-async def main():
-    """Main entry point for MCP server."""
-    server = CloudctlMCPServer()
+@mcp.tool()
+def cloudctl_context() -> str:
+    """Get current cloud context.
 
-    # Read requests from stdin
-    while True:
-        try:
-            line = sys.stdin.readline()
-            if not line:
-                break
+    Returns the cloud provider, organization, account ID, region, and role.
 
-            request = json.loads(line)
-            response = await server.handle_request(request)
-            print(json.dumps(response), flush=True)
+    Returns:
+        Current cloud context details
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.get_context())
+        return str(result)
+    except Exception as e:
+        error_msg = f"Error getting context: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
 
-        except json.JSONDecodeError:
-            print(json.dumps({"error": "Invalid JSON"}), flush=True)
-        except Exception as e:
-            print(json.dumps({"error": str(e)}), flush=True)
+
+@mcp.tool()
+def cloudctl_list_orgs() -> str:
+    """List all configured organizations.
+
+    Returns:
+        JSON array of organizations with their cloud providers
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.list_organizations())
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        error_msg = f"Error listing organizations: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_switch(organization: str) -> str:
+    """Switch to a different organization.
+
+    Uses the cloudctl binary's SSO mechanism - no manual credential entry needed.
+
+    Args:
+        organization: Organization name to switch to
+
+    Returns:
+        New context after successful switch
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.switch_context(organization))
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error switching to {organization}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_health() -> str:
+    """Run comprehensive health diagnostics.
+
+    Checks:
+    - Is cloudctl installed?
+    - How many organizations are configured?
+    - Are credentials valid for each organization?
+    - Overall system health status
+
+    Returns:
+        Health check results with status details
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.health_check())
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error running health check: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_check_credentials() -> str:
+    """Verify all credentials are valid.
+
+    Tests credential validity for all configured organizations.
+
+    Returns:
+        Dictionary with credential status for each organization
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.check_all_credentials())
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        error_msg = f"Error checking credentials: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_token_status(organization: str) -> str:
+    """Get token status for specific organization.
+
+    Args:
+        organization: Organization name
+
+    Returns:
+        Token validity status with expiration information
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.get_token_status(organization))
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error getting token status for {organization}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_verify_credentials(organization: str) -> str:
+    """Verify access to specific organization.
+
+    Tests that you can authenticate to a specific organization.
+
+    Args:
+        organization: Organization name
+
+    Returns:
+        true/false for credential validity with error message if failed
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.verify_credentials(organization))
+        return json.dumps({"valid": result}, indent=2)
+    except Exception as e:
+        error_msg = f"Error verifying credentials for {organization}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_switch_region(region: str) -> str:
+    """Switch AWS region.
+
+    Sets AWS_REGION environment variable for current session.
+
+    Args:
+        region: AWS region code (e.g., us-east-1, eu-west-2)
+
+    Returns:
+        Confirmation of region switch with new value
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.switch_region(region))
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error switching to region {region}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_switch_project(project: str) -> str:
+    """Switch GCP project.
+
+    Sets GCLOUD_PROJECT and CLOUDSDK_CORE_PROJECT environment variables.
+
+    Args:
+        project: GCP project ID
+
+    Returns:
+        Confirmation of project switch with new value
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.switch_project(project))
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error switching to project {project}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_ensure_access(organization: str) -> str:
+    """Ensure access to organization with auto-recovery.
+
+    Attempts to ensure you have access to an organization, with automatic
+    recovery mechanisms if needed.
+
+    Args:
+        organization: Organization name
+
+    Returns:
+        Status of access verification with current context and recovery details
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.ensure_cloud_access(organization))
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        error_msg = f"Error ensuring access to {organization}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_validate_switch() -> str:
+    """Validate context switch operation.
+
+    Confirms that the last context switch was successful.
+
+    Returns:
+        Current context after last switch with validation status
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.validate_switch())
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        error_msg = f"Error validating switch: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
+@mcp.tool()
+def cloudctl_login(organization: str) -> str:
+    """Initiate SSO login for organization.
+
+    Starts the SSO login flow for a specific organization.
+
+    Args:
+        organization: Organization name
+
+    Returns:
+        Login status with current context after successful login
+    """
+    try:
+        import asyncio
+        skill = CloudctlSkill()
+        result = asyncio.run(skill.login(organization))
+        return json.dumps(result.model_dump(mode="json"), indent=2)
+    except Exception as e:
+        error_msg = f"Error logging in to {organization}: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    mcp.run(sys.stdin, sys.stdout)
