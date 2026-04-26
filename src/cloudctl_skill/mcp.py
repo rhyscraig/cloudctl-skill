@@ -302,5 +302,11 @@ def cloudctl_login(organization: str) -> str:
         return error_msg
 
 
+def serve() -> None:
+    """Run the MCP server."""
+    logger.info("CloudctlSkill MCP server starting...")
+    mcp.run()
+
+
 if __name__ == "__main__":
-    mcp.run(sys.stdin, sys.stdout)
+    serve()
