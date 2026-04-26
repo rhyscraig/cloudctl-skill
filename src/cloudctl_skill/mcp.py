@@ -41,7 +41,7 @@ class CloudctlMCPServer:
                 if not org:
                     return {"error": "organization parameter required"}
                 result = await self.skill.switch_context(org)
-                return {"result": result}
+                return {"result": result.model_dump(mode="json")}
 
             elif method == "list_orgs":
                 result = await self.skill.list_organizations()
@@ -74,14 +74,14 @@ class CloudctlMCPServer:
                 if not region:
                     return {"error": "region parameter required"}
                 result = await self.skill.switch_region(region)
-                return {"result": result}
+                return {"result": result.model_dump(mode="json")}
 
             elif method == "switch_project":
                 project = params.get("project")
                 if not project:
                     return {"error": "project parameter required"}
                 result = await self.skill.switch_project(project)
-                return {"result": result}
+                return {"result": result.model_dump(mode="json")}
 
             elif method == "ensure_access":
                 org = params.get("organization")
@@ -99,7 +99,7 @@ class CloudctlMCPServer:
                 if not org:
                     return {"error": "organization parameter required"}
                 result = await self.skill.login(org)
-                return {"result": result}
+                return {"result": result.model_dump(mode="json")}
 
             else:
                 return {"error": f"Unknown method: {method}"}

@@ -161,12 +161,18 @@ class CloudctlSkill:
         if not result.success:
             # Check if it's an interactive prompt failure
             if "input is not a terminal" in result.error.lower() or "select account" in result.error.lower():
-                result.error = (
-                    f"Unable to switch to '{organization}' non-interactively. "
-                    "Please run 'cloudctl switch {organization}' manually to set up context. "
-                    "Then /cloudctl commands will work."
+                # Create new result with better error message
+                result = CommandResult(
+                    success=False,
+                    status=CommandStatus.FAILURE,
+                    error=(
+                        f"Unable to switch to '{organization}' non-interactively. "
+                        "Please run 'cloudctl switch {organization}' manually to set up context. "
+                        "Then /cloudctl commands will work."
+                    ),
+                    fix=f"Run: cloudctl switch {organization}",
+                    output=result.output,
                 )
-                result.fix = f"Run: cloudctl switch {organization}"
             # Try auto-refresh on token error
             elif "token" in result.error.lower() or "credential" in result.error.lower():
                 refresh_result = await self.login(organization)
@@ -202,6 +208,9 @@ class CloudctlSkill:
     async def switch_region(self, region: str) -> CommandResult:
         """Switch cloud region.
 
+        Note: Region switching via cloudctl may be limited. This method
+        updates the AWS_REGION environment variable for the session.
+
         Args:
             region: Region identifier (e.g., 'us-west-2', 'europe-west1')
 
@@ -211,10 +220,36 @@ class CloudctlSkill:
         if not region or not region.strip():
             raise ValueError("Region cannot be empty")
 
-        return await self._execute_cloudctl("env", "--region", region)
+        # Get current context to validate region
+        try:
+            context = await self.get_context()
+            if context.provider == CloudProvider.AWS:
+                # For AWS, set the region in environment
+                os.environ["AWS_REGION"] = region
+                return CommandResult(
+                    success=True,
+                    status=CommandStatus.SUCCESS,
+                    output=f"Region switched to {region} (AWS_REGION={region})",
+                )
+            else:
+                return CommandResult(
+                    success=False,
+                    status=CommandStatus.FAILURE,
+                    error=f"Region switching not supported for {context.provider.value} provider",
+                    fix="Region switching is primarily for AWS. For GCP, use project switching.",
+                )
+        except RuntimeError as e:
+            return CommandResult(
+                success=False,
+                status=CommandStatus.FAILURE,
+                error=str(e),
+                fix="Set a context first with 'cloudctl switch <org>'",
+            )
 
     async def switch_project(self, project_id: str) -> CommandResult:
         """Switch GCP project.
+
+        Updates the GCLOUD_PROJECT environment variable for the session.
 
         Args:
             project_id: GCP project ID
@@ -225,7 +260,32 @@ class CloudctlSkill:
         if not project_id or not project_id.strip():
             raise ValueError("Project ID cannot be empty")
 
-        return await self._execute_cloudctl("env", "--project", project_id)
+        # Get current context to validate provider
+        try:
+            context = await self.get_context()
+            if context.provider == CloudProvider.GCP:
+                # For GCP, set the project in environment
+                os.environ["GCLOUD_PROJECT"] = project_id
+                os.environ["CLOUDSDK_CORE_PROJECT"] = project_id
+                return CommandResult(
+                    success=True,
+                    status=CommandStatus.SUCCESS,
+                    output=f"GCP project switched to {project_id} (GCLOUD_PROJECT={project_id})",
+                )
+            else:
+                return CommandResult(
+                    success=False,
+                    status=CommandStatus.FAILURE,
+                    error=f"Project switching not supported for {context.provider.value} provider",
+                    fix="Project switching is primarily for GCP. For AWS, use region switching.",
+                )
+        except RuntimeError as e:
+            return CommandResult(
+                success=False,
+                status=CommandStatus.FAILURE,
+                error=str(e),
+                fix="Set a context first with 'cloudctl switch <org>'",
+            )
 
     async def list_organizations(self) -> list[dict[str, str]]:
         """List all available organizations.
@@ -310,26 +370,29 @@ class CloudctlSkill:
         Raises:
             RuntimeError: If unable to get token status
         """
-        # Try to get token status - cloudctl may vary in implementation
-        # First try with format flag
-        result = await self._execute_cloudctl("status", "--format", "json")
-        if not result.success:
-            raise RuntimeError(f"Failed to get token status: {result.error}")
-
+        # Cloudctl status doesn't support --format flag, so we fallback to assuming
+        # if we can communicate with cloudctl, tokens are generally valid
         try:
-            data = json.loads(result.output)
-            # If data already has token info, use it directly
-            if "valid" in data:
-                return TokenStatus(**data)
-            # Otherwise construct from available data
-            return TokenStatus(
-                valid=True,
-                expires_in_seconds=None,
-                expired_at=None,
-                refreshed_at=None,
-            )
-        except (json.JSONDecodeError, ValueError) as e:
-            # Fallback: assume token is valid if we can communicate with cloudctl
+            # Try to get status without format flag
+            result = await self._execute_cloudctl("status")
+            if result.success:
+                # If cloudctl status works, assume token is valid
+                return TokenStatus(
+                    valid=True,
+                    expires_in_seconds=None,
+                    expired_at=None,
+                    refreshed_at=None,
+                )
+            else:
+                # If status fails, token might be invalid
+                return TokenStatus(
+                    valid=False,
+                    expires_in_seconds=None,
+                    expired_at=None,
+                    refreshed_at=None,
+                )
+        except Exception:
+            # Default to valid if we can't determine
             return TokenStatus(
                 valid=True,
                 expires_in_seconds=None,
