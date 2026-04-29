@@ -3,13 +3,14 @@
 import asyncio
 import json
 import os
-import re
-import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+import yaml
+
+from . import oci_handler
 from .config import load_config
 from .models import (
     CloudContext,
@@ -22,6 +23,40 @@ from .models import (
     TokenStatus,
 )
 from .utils import setup_audit_logging, write_audit_log
+
+# Path to cloudctl orgs configuration
+_ORGS_CONFIG_PATH = Path.home() / ".config" / "cloudctl" / "orgs.yaml"
+
+
+def _load_orgs_yaml() -> dict[str, Any]:
+    """Load ~/.config/cloudctl/orgs.yaml and return its contents.
+
+    Returns:
+        Parsed YAML dict, or empty dict if not found / unreadable.
+    """
+    if not _ORGS_CONFIG_PATH.exists():
+        return {}
+    try:
+        with open(_ORGS_CONFIG_PATH, encoding="utf-8") as fh:
+            return yaml.safe_load(fh) or {}
+    except Exception:
+        return {}
+
+
+def _get_org_config(org_name: str) -> dict[str, Any]:
+    """Return the orgs.yaml config dict for *org_name*, or {} if not found.
+
+    Args:
+        org_name: Organisation name as defined in orgs.yaml.
+
+    Returns:
+        Dict of org configuration keys.
+    """
+    data = _load_orgs_yaml()
+    for org in data.get("orgs", []):
+        if isinstance(org, dict) and org.get("name") == org_name:
+            return org
+    return {}
 
 
 class CloudctlSkill:
@@ -37,15 +72,15 @@ class CloudctlSkill:
         _audit_logger: Path to audit log
     """
 
-    def __init__(self, config: Optional[SkillConfig] = None) -> None:
+    def __init__(self, config: SkillConfig | None = None) -> None:
         """Initialize CloudctlSkill.
 
         Args:
             config: Optional SkillConfig. If None, loads from environment/files.
         """
         self.config = config or load_config()
-        self._context_cache: Optional[CloudContext] = None
-        self._cache_time: Optional[datetime] = None
+        self._context_cache: CloudContext | None = None
+        self._cache_time: datetime | None = None
         self._audit_logger = setup_audit_logging() if self.config.enable_audit_logging else None
 
     async def get_context(self) -> CloudContext:
@@ -100,7 +135,7 @@ class CloudctlSkill:
             "then run 'cloudctl switch <org>' to set one."
         )
 
-    async def switch_context(self, organization: str, account_id: Optional[str] = None) -> CommandResult:
+    async def switch_context(self, organization: str, account_id: str | None = None) -> CommandResult:
         """Switch cloud context to specified organization.
 
         Validates context switch and updates state. Automatically
@@ -325,12 +360,12 @@ class CloudctlSkill:
                         provider_start = line.find("[")
                         provider_end = line.find("]")
                         if provider_start >= 0 and provider_end > provider_start:
-                            provider = line[provider_start + 1:provider_end]
+                            provider = line[provider_start + 1 : provider_end]
                             orgs.append({"name": org_name, "provider": provider.lower()})
 
             if orgs:
                 return orgs
-            raise RuntimeError(f"Failed to parse organization list")
+            raise RuntimeError("Failed to parse organization list") from None
 
     async def verify_credentials(self, organization: str) -> bool:
         """Verify credentials exist and are valid for organization.
@@ -346,6 +381,10 @@ class CloudctlSkill:
     async def login(self, organization: str) -> CommandResult:
         """Login to organization and refresh credentials.
 
+        For OCI organisations (provider: oci in orgs.yaml) this calls the
+        oci_handler directly, bypassing the cloudctl binary which does not yet
+        support Oracle Cloud Infrastructure.
+
         Args:
             organization: Organization name to login to
 
@@ -355,7 +394,13 @@ class CloudctlSkill:
         if not organization or not organization.strip():
             raise ValueError("Organization cannot be empty")
 
-        # Use cloudctl login command for the organization
+        # Route OCI orgs to the dedicated OCI handler
+        org_config = _get_org_config(organization)
+        if oci_handler.is_oci_org(org_config):
+            profile = str(org_config.get("oci_profile", "DEFAULT"))
+            return await oci_handler.oci_login(organization, profile=profile)
+
+        # Use cloudctl login command for AWS / GCP / Azure
         return await self._execute_cloudctl("login", organization)
 
     async def get_token_status(self, organization: str) -> TokenStatus:
@@ -414,7 +459,7 @@ class CloudctlSkill:
         try:
             orgs = await self.list_organizations()
         except RuntimeError as e:
-            raise RuntimeError(f"Failed to check credentials: {e}")
+            raise RuntimeError(f"Failed to check credentials: {e}") from e
 
         results = {}
         for org in orgs:
@@ -583,7 +628,7 @@ class CloudctlSkill:
                         "auto_refreshed": False,
                     }
                 auto_refreshed = True
-        except RuntimeError as e:
+        except RuntimeError:
             # Try login anyway
             login_result = await self.login(organization)
             if not login_result.success:
@@ -672,7 +717,7 @@ class CloudctlSkill:
                         process.communicate(),
                         timeout=self.config.cloudctl_timeout,
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     process.kill()
                     return CommandResult(
                         success=False,
@@ -698,7 +743,7 @@ class CloudctlSkill:
                 # Retry on transient errors
                 if attempt < self.config.cloudctl_retries:
                     if "timeout" in error.lower() or "temporarily unavailable" in error.lower():
-                        await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                        await asyncio.sleep(2**attempt)  # Exponential backoff
                         continue
 
                 # Permanent error
@@ -715,13 +760,13 @@ class CloudctlSkill:
                     success=False,
                     status=CommandStatus.FAILURE,
                     error=f"cloudctl not found at {self.config.cloudctl_path}",
-                    fix=f"Install cloudctl or set CLOUDCTL_PATH",
+                    fix="Install cloudctl or set CLOUDCTL_PATH",
                     exit_code=-1,
                 )
             except Exception as e:
                 last_error = str(e)
                 if attempt < self.config.cloudctl_retries:
-                    await asyncio.sleep(2 ** attempt)
+                    await asyncio.sleep(2**attempt)
                     continue
 
         return CommandResult(
@@ -732,7 +777,7 @@ class CloudctlSkill:
             exit_code=-1,
         )
 
-    async def _read_context_file(self) -> Optional[CloudContext]:
+    async def _read_context_file(self) -> CloudContext | None:
         """Read context from ~/.config/cloudctl/context file.
 
         This is a fallback method when cloudctl status doesn't work.
@@ -745,7 +790,7 @@ class CloudctlSkill:
             if not context_file.exists():
                 return None
 
-            with open(context_file, "r") as f:
+            with open(context_file) as f:
                 data = json.load(f)
 
             # Make sure we have an organization
@@ -875,8 +920,8 @@ class CloudctlSkill:
             # Find provider
             try:
                 provider = CloudProvider(provider_str)
-            except ValueError:
-                raise ValueError(f"Unknown provider: {provider_str}")
+            except ValueError as e:
+                raise ValueError(f"Unknown provider: {provider_str}") from e
 
             # Parse optional fields
             account_id = None
@@ -903,4 +948,4 @@ class CloudctlSkill:
             )
 
         except (ValueError, IndexError) as e:
-            raise RuntimeError(f"Failed to parse context: {e}")
+            raise RuntimeError(f"Failed to parse context: {e}") from e
