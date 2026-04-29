@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -13,6 +13,7 @@ class CloudProvider(str, Enum):
     AWS = "aws"
     GCP = "gcp"
     AZURE = "azure"
+    OCI = "oci"
 
 
 class CommandStatus(str, Enum):
@@ -30,9 +31,9 @@ class TokenStatus(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     valid: bool = Field(description="Whether token is currently valid")
-    expires_in_seconds: Optional[int] = Field(None, description="Seconds until expiry")
-    expired_at: Optional[datetime] = Field(None, description="When token expired")
-    refreshed_at: Optional[datetime] = Field(None, description="When token was last refreshed")
+    expires_in_seconds: int | None = Field(None, description="Seconds until expiry")
+    expired_at: datetime | None = Field(None, description="When token expired")
+    refreshed_at: datetime | None = Field(None, description="When token was last refreshed")
 
 
 class CommandResult(BaseModel):
@@ -41,12 +42,24 @@ class CommandResult(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     success: bool = Field(description="Whether command succeeded")
-    status: CommandStatus = Field(description="Command execution status")
+    status: CommandStatus = Field(default=CommandStatus.SUCCESS, description="Command execution status")
     output: str = Field(default="", description="Command output")
-    error: Optional[str] = Field(None, description="Error message if failed")
-    fix: Optional[str] = Field(None, description="Suggested fix if failed")
-    stderr: Optional[str] = Field(None, description="Standard error output")
+    error: str | None = Field(None, description="Error message if failed")
+    fix: str | None = Field(None, description="Suggested fix if failed")
+    stderr: str | None = Field(None, description="Standard error output")
     exit_code: int = Field(default=0, description="Command exit code")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def infer_status_from_success(cls, v: Any, info: Any) -> CommandStatus:
+        """Infer status from success field if not provided."""
+        if v is not None:
+            return v
+        success = info.data.get("success")
+        if success:
+            return CommandStatus.SUCCESS
+        else:
+            return CommandStatus.FAILURE
 
 
 class CloudContext(BaseModel):
@@ -56,9 +69,9 @@ class CloudContext(BaseModel):
 
     provider: CloudProvider = Field(description="Cloud provider")
     organization: str = Field(description="Organization name")
-    account_id: Optional[str] = Field(None, description="AWS account ID or GCP project ID")
-    region: Optional[str] = Field(None, description="Current region")
-    role: Optional[str] = Field(None, description="IAM role name")
+    account_id: str | None = Field(None, description="AWS account ID or GCP project ID")
+    region: str | None = Field(None, description="Current region")
+    role: str | None = Field(None, description="IAM role name")
     credentials_valid: bool = Field(default=False, description="Whether credentials are valid")
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="When context was last updated")
 
@@ -112,12 +125,12 @@ class OperationLog(BaseModel):
 
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="When operation occurred")
     operation: str = Field(description="Operation name (e.g., 'switch_context')")
-    context_before: Optional[dict[str, Any]] = Field(None, description="Context before operation")
-    context_after: Optional[dict[str, Any]] = Field(None, description="Context after operation")
-    user: Optional[str] = Field(None, description="Username performing operation")
+    context_before: dict[str, Any] | None = Field(None, description="Context before operation")
+    context_after: dict[str, Any] | None = Field(None, description="Context after operation")
+    user: str | None = Field(None, description="Username performing operation")
     success: bool = Field(description="Whether operation succeeded")
-    error: Optional[str] = Field(None, description="Error message if failed")
-    duration_ms: Optional[float] = Field(None, description="Duration of operation in milliseconds")
+    error: str | None = Field(None, description="Error message if failed")
+    duration_ms: float | None = Field(None, description="Duration of operation in milliseconds")
 
     def to_jsonl(self) -> str:
         """Convert to JSONL format."""
@@ -131,7 +144,7 @@ class HealthCheckResult(BaseModel):
 
     is_healthy: bool = Field(description="Overall health status")
     cloudctl_installed: bool = Field(description="Whether cloudctl is installed")
-    cloudctl_version: Optional[str] = Field(None, description="Installed cloudctl version")
+    cloudctl_version: str | None = Field(None, description="Installed cloudctl version")
     organizations_available: int = Field(default=0, description="Number of available organizations")
     credentials_valid: dict[str, bool] = Field(default_factory=dict, description="Per-org credential status")
     checks_passed: int = Field(default=0, description="Number of checks passed")

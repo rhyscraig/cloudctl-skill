@@ -6,7 +6,7 @@ health checks, login, multi-cloud, error handling, and integration scenarios.
 
 import json
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
@@ -22,7 +22,6 @@ from cloudctl_skill.models import (
     SkillConfig,
     TokenStatus,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -109,12 +108,14 @@ class TestCloudProvider:
         assert CloudProvider.AWS.value == "aws"
         assert CloudProvider.GCP.value == "gcp"
         assert CloudProvider.AZURE.value == "azure"
+        assert CloudProvider.OCI.value == "oci"
 
     def test_provider_from_string(self) -> None:
         """Test creating CloudProvider from string."""
         assert CloudProvider("aws") == CloudProvider.AWS
         assert CloudProvider("gcp") == CloudProvider.GCP
         assert CloudProvider("azure") == CloudProvider.AZURE
+        assert CloudProvider("oci") == CloudProvider.OCI
 
 
 class TestTokenStatus:
